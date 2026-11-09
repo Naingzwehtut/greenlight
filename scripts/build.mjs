@@ -8,7 +8,7 @@ rmSync("dist", { recursive: true, force: true });
 const shared = {
   bundle: true,
   platform: "node",
-  target: "node20",
+  target: "node22",
   format: "esm",
   sourcemap: false,
   legalComments: "none",

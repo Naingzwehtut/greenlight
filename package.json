@@ -22,7 +22,7 @@
     "testing"
   ],
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "bin": {
     "greenlight": "dist/cli.js"
