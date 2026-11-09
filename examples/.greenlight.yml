@@ -1,0 +1,33 @@
+# Example config. Put it at the root of your repository as .greenlight.yml.
+# Every key is optional; these are the defaults unless noted.
+
+provider: anthropic # anthropic | openai | ollama
+model: claude-opus-5-5 # default for anthropic
+effort: high # low | medium | high | xhigh | max
+
+# pr: open a pull request with the fix (default)
+# push: commit straight to the failing branch (same-repo branches only)
+# comment: diagnose only, never change code
+mode: pr
+
+maxIterations: 20 # model turns per attempt
+maxTokens: 1000000 # input + output tokens per attempt
+minConfidence: 0.6 # below this, comment instead of opening a PR
+commandTimeout: 600 # seconds per check command
+
+# Commands are detected from package.json / pyproject.toml when omitted.
+commands:
+  test: npm test
+  typecheck: npm run typecheck
+  lint: npm run lint
+  # install: npm ci   # runs before the agent; "none" to skip
+
+paths:
+  allow: ["**"]
+  deny: ["migrations/**", "**/*.generated.ts"] # added to the built-in deny list
+
+allowTestChanges: false # tests are the spec; keep this off unless you trust the reviewer
+allowDependencyChanges: false
+
+branchPrefix: greenlight/
+labels: [greenlight]
