@@ -1,0 +1,43 @@
+{
+  "name": "greenlight-ci",
+  "version": "0.1.0",
+  "description": "An AI agent that turns red CI green: it reads failing CI logs, reproduces the failure, fixes the code and opens a pull request.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Naingzwehtut",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Naingzwehtut/greenlight.git"
+  },
+  "bugs": "https://github.com/Naingzwehtut/greenlight/issues",
+  "homepage": "https://github.com/Naingzwehtut/greenlight#readme",
+  "keywords": [
+    "ci",
+    "github-actions",
+    "ai-agent",
+    "llm",
+    "claude",
+    "automation",
+    "devtools",
+    "testing"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "greenlight": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "bench": "node --experimental-strip-types bench/run.ts",
+    "check": "npm run typecheck && npm test"
+  }
+}

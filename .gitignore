@@ -1,0 +1,8 @@
+node_modules/
+coverage/
+.greenlight/
+*.log
+!test/fixtures/**/*.log
+!bench/cases/**/*.log
+.env
+.DS_Store
