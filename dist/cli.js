@@ -59987,7 +59987,7 @@ var pytestParser = {
       const id = m.groups.id;
       const [filePart, ...rest] = id.split("::");
       const testName = rest.join("::");
-      const block = blocks.get(testName.replace(/::/g, ".")) ?? blocks.get(testName.split("::").pop() ?? "");
+      const block = testName ? blocks.get(testName.replace(/::/g, ".")) ?? blocks.get(testName.split("::").pop() ?? "") : blocks.get(`collecting ${filePart}`);
       const loc = block?.map((l) => LOCATION.exec(l.trim())).find((x) => x?.groups);
       const eLines = block?.filter((l) => /^E\s/.test(l)).map((l) => l.slice(1).trim()) ?? [];
       out.push({
@@ -60072,7 +60072,7 @@ function dedupe(fs5) {
 // src/logs/parsers/vitest.ts
 var FAIL_HEADER = /^\s*FAIL\s+(?<file>\S+?\.(?:[cm]?[jt]sx?))\s+>\s+(?<name>.+?)\s*$/;
 var FILE_FAIL = /^\s*FAIL\s+(?<file>\S+?\.(?:[cm]?[jt]sx?))\s+\[\s*\S+\s*\]\s*$/;
-var LOCATION2 = /^\s*❯\s+(?<file>[^\s:]+):(?<line>\d+):(?<col>\d+)/;
+var LOCATION2 = /^\s*❯\s+(?:\S+\s+)?(?<file>[^\s:]+\.\w+):(?<line>\d+):(?<col>\d+)/;
 var SEPARATOR = /^\s*⎯{3,}/;
 var vitestParser = {
   source: "vitest",
@@ -60092,7 +60092,7 @@ var vitestParser = {
       }
       const meaningful = body.filter((l) => l.trim() !== "");
       if (meaningful.length === 0) continue;
-      const loc = body.map((l) => LOCATION2.exec(l)).find((m) => m?.groups);
+      const loc = body.map((l) => LOCATION2.exec(l)).find((m) => m?.groups && !m.groups.file.includes("node_modules"));
       const message = meaningful.filter((l) => !LOCATION2.test(l)).slice(0, 25).join("\n").trim();
       const file2 = normalizePath(header.groups.file);
       out.push({
