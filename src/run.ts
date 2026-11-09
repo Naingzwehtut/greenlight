@@ -62,7 +62,7 @@ function skipReason(d: Diagnosis): string {
 }
 
 /** Whether an attempt is good enough to publish as a commit or PR. */
-export function shouldPublish(attempt: AttemptResult | undefined, cfg: Config): attempt is AttemptResult {
+export function shouldPublish(attempt: AttemptResult | undefined, cfg: Config): boolean {
   return (
     !!attempt &&
     attempt.changedFiles.length > 0 &&
