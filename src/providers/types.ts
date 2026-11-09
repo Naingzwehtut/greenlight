@@ -42,9 +42,16 @@ export interface Turn {
   usage: Usage;
 }
 
+export interface TurnInput {
+  /** Results for every tool call of the previous turn. */
+  results?: ToolResult[];
+  /** A plain user message, e.g. a reminder when the model stopped without a report. */
+  text?: string;
+}
+
 export interface ChatSession {
-  /** Send tool results from the previous turn (none on the first call) and get the next turn. */
-  next(results?: ToolResult[]): Promise<Turn>;
+  /** Send the input for this turn (nothing on the first call) and get the model's next turn. */
+  next(input?: TurnInput): Promise<Turn>;
 }
 
 export interface SessionOptions {

@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import type { ChatSession, Provider, SessionOptions, ToolResult, Turn } from "./types.js";
+import type { ChatSession, Provider, SessionOptions, ToolResult, Turn, TurnInput } from "./types.js";
 
 type Effort = "low" | "medium" | "high" | "xhigh" | "max";
 
@@ -37,19 +37,16 @@ export class AnthropicProvider implements Provider {
     const useFallback = FALLBACK_MODELS.has(model);
 
     return {
-      async next(results?: ToolResult[]): Promise<Turn> {
-        if (results?.length) {
-          // All results for one turn go back in a single user message.
-          messages.push({
-            role: "user",
-            content: results.map((r) => ({
-              type: "tool_result" as const,
-              tool_use_id: r.id,
-              content: r.content,
-              is_error: r.isError ?? false,
-            })),
-          });
-        }
+      async next(input?: TurnInput): Promise<Turn> {
+        // All results for one turn go back in a single user message, followed by any text.
+        const content: Anthropic.Beta.Messages.BetaContentBlockParam[] = (input?.results ?? []).map((r: ToolResult) => ({
+          type: "tool_result" as const,
+          tool_use_id: r.id,
+          content: r.content,
+          is_error: r.isError ?? false,
+        }));
+        if (input?.text) content.push({ type: "text", text: input.text });
+        if (content.length) messages.push({ role: "user", content });
 
         const response = await client.beta.messages.create({
           model,

@@ -1,4 +1,4 @@
-import type { ChatSession, Provider, SessionOptions, ToolResult, Turn } from "./types.js";
+import type { ChatSession, Provider, SessionOptions, Turn, TurnInput } from "./types.js";
 
 // Talks to any server that implements the OpenAI Chat Completions API with function
 // calling: OpenAI itself, Ollama (http://localhost:11434/v1), vLLM, LM Studio and others.
@@ -45,10 +45,11 @@ export class OpenAICompatibleProvider implements Provider {
     ];
 
     return {
-      async next(results?: ToolResult[]): Promise<Turn> {
-        for (const r of results ?? []) {
+      async next(input?: TurnInput): Promise<Turn> {
+        for (const r of input?.results ?? []) {
           messages.push({ role: "tool", tool_call_id: r.id, content: r.isError ? `ERROR: ${r.content}` : r.content });
         }
+        if (input?.text) messages.push({ role: "user", content: input.text });
         const res = await doFetch(`${baseUrl.replace(/\/$/, "")}/chat/completions`, {
           method: "POST",
           headers: {
