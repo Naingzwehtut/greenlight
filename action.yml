@@ -1,0 +1,52 @@
+name: greenlight
+description: AI agent that reads failing CI logs, reproduces the failure, fixes the code and opens a pull request.
+author: Naingzwehtut
+branding:
+  icon: check-circle
+  color: green
+
+inputs:
+  github-token:
+    description: Token used to read run logs, push the fix branch and open pull requests.
+    default: ${{ github.token }}
+  anthropic-api-key:
+    description: Anthropic API key (for the default anthropic provider).
+    required: false
+  openai-api-key:
+    description: OpenAI API key (for the openai provider).
+    required: false
+  provider:
+    description: "Model provider: anthropic, openai or ollama. Overrides .greenlight.yml."
+    required: false
+  model:
+    description: Model ID. Defaults to claude-opus-5-5 for anthropic.
+    required: false
+  effort:
+    description: "Reasoning effort: low, medium, high, xhigh or max."
+    required: false
+  mode:
+    description: "pr (open a fix PR), push (commit to the failing branch) or comment (diagnose only)."
+    required: false
+  run-id:
+    description: Workflow run to inspect. Defaults to the run that triggered workflow_run.
+    required: false
+  max-iterations:
+    description: Maximum model turns for one fix attempt.
+    required: false
+  min-confidence:
+    description: Minimum confidence (0-1) required to publish a fix.
+    required: false
+
+outputs:
+  category:
+    description: "Failure category: test, type, lint, build, dependency, infra, flaky or unknown."
+  status:
+    description: "fixed, partial, no_change, rejected, budget, refused or skipped."
+  confidence:
+    description: The agent's confidence in its fix, 0 to 1.
+  pr-url:
+    description: URL of the pull request greenlight opened, if any.
+
+runs:
+  using: node24
+  main: dist/index.js
