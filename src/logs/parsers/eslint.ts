@@ -4,7 +4,7 @@ import { normalizePath } from "../clean.js";
 // ESLint "stylish" output:
 //   /home/runner/work/app/app/src/a.ts
 //     3:7  error  'x' is assigned a value but never used  @typescript-eslint/no-unused-vars
-const FILE_HEADER = /^(?:\/|[A-Za-z]:[\/]|\.{0,2}\/?[\w@.-]+\/)\S*\.(?:[cm]?[jt]sx?|vue|svelte|astro)$/;
+const FILE_HEADER = /^(?:\/|[A-Za-z]:[\\/]|\.{0,2}\/?[\w@.-]+\/)\S*\.(?:[cm]?[jt]sx?|vue|svelte|astro)$/;
 const PROBLEM = /^\s+(?<line>\d+):(?<col>\d+)\s+(?<sev>error|warning)\s+(?<msg>.+?)(?:\s{2,}(?<rule>[@\w/-]+))?\s*$/;
 
 export const eslintParser: LogParser = {

@@ -4,10 +4,11 @@ import { normalizePath } from "../clean.js";
 // pytest's "short test summary info" is the most reliable list of failures:
 //   FAILED tests/test_math.py::test_add - assert 3 == 4
 //   ERROR tests/test_io.py - ModuleNotFoundError: No module named 'foo'
-// The FAILURES section above it gives the location: "tests/test_math.py:5: AssertionError".
+// The FAILURES section gives locations like "src/lib.py:6: ZeroDivisionError". We use the first
+// one that names an exception type: that is where the error was raised, often outside the test.
 const SUMMARY = /^(?<kind>FAILED|ERROR)\s+(?<id>\S+?)(?:\s+-\s+(?<msg>.*))?$/;
 const SECTION_TITLE = /^_{3,}\s+(?<name>.+?)\s+_{3,}$/;
-const LOCATION = /^(?<file>[\w./\-]+\.py):(?<line>\d+):\s+(?<err>\w+)/;
+const LOCATION = /^(?<file>[\w./\\-]+\.py):(?<line>\d+):\s+(?<err>\w+)/;
 
 export const pytestParser: LogParser = {
   source: "pytest",

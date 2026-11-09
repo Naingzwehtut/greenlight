@@ -2,7 +2,7 @@ import type { Failure, LogParser } from "../types.js";
 import { normalizePath } from "../clean.js";
 
 // mypy: src/app.py:10: error: Incompatible return value type (got "str", expected "int")  [return-value]
-const MYPY = /^(?<file>[\w./\-]+\.pyi?):(?<line>\d+)(?::(?<col>\d+))?: error: (?<msg>.+?)(?:\s+\[(?<code>[\w-]+)\])?$/;
+const MYPY = /^(?<file>[\w./\\-]+\.pyi?):(?<line>\d+)(?::(?<col>\d+))?: error: (?<msg>.+?)(?:\s+\[(?<code>[\w-]+)\])?$/;
 
 export const mypyParser: LogParser = {
   source: "mypy",
@@ -28,9 +28,9 @@ export const mypyParser: LogParser = {
 // ruff, concise format:  src/app.py:1:8: F401 [*] `os` imported but unused
 // ruff, full format:     F401 [*] `os` imported but unused
 //                         --> src/app.py:1:8
-const RUFF_CONCISE = /^(?<file>[\w./\-]+\.pyi?):(?<line>\d+):(?<col>\d+): (?<code>[A-Z]+\d+) (?:\[\*\] )?(?<msg>.+)$/;
+const RUFF_CONCISE = /^(?<file>[\w./\\-]+\.pyi?):(?<line>\d+):(?<col>\d+): (?<code>[A-Z]+\d+) (?:\[\*\] )?(?<msg>.+)$/;
 const RUFF_FULL_HEAD = /^(?<code>[A-Z]+\d+) (?:\[\*\] )?(?<msg>.+)$/;
-const RUFF_FULL_LOC = /^\s*-->\s+(?<file>[\w./\-]+\.pyi?):(?<line>\d+):(?<col>\d+)/;
+const RUFF_FULL_LOC = /^\s*-->\s+(?<file>[\w./\\-]+\.pyi?):(?<line>\d+):(?<col>\d+)/;
 
 export const ruffParser: LogParser = {
   source: "ruff",

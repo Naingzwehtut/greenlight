@@ -17,10 +17,10 @@ export function cleanLog(raw: string): string {
 
 /** Normalise a path from a log to a repo-relative POSIX path. */
 export function normalizePath(p: string, workspace?: string): string {
-  let out = p.trim().replace(/\/g, "/");
+  let out = p.trim().replace(/\\/g, "/");
   const roots = [workspace, "/home/runner/work/", "/github/workspace/"].filter(Boolean) as string[];
   for (const root of roots) {
-    const r = root.replace(/\/g, "/").replace(/\/?$/, "/");
+    const r = root.replace(/\\/g, "/").replace(/\/?$/, "/");
     if (out.startsWith(r)) {
       out = out.slice(r.length);
       // /home/runner/work/<repo>/<repo>/src/x.ts -> src/x.ts

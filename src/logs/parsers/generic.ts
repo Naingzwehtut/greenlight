@@ -3,7 +3,7 @@ import { tail } from "../clean.js";
 
 // Used only when no specific parser finds anything. It keeps the end of the log,
 // where the reason for a failed step almost always is, plus any lines that look like errors.
-const ERRORISH = /\b(error|failed|failure|exception|traceback|cannot find|not found|exit code [1-9])\b/i;
+const ERRORISH = /ERR!|\b(error|failed|failure|exception|traceback|cannot find|not found|exit code [1-9])\b/i;
 
 export const genericParser: LogParser = {
   source: "generic",
