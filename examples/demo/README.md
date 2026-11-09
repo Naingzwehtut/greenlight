@@ -12,7 +12,7 @@ npm test
 Ask greenlight to fix it locally (needs `ANTHROPIC_API_KEY`):
 
 ```bash
-npx greenlight-ci fix --run "npm test"
+npx github:Naingzwehtut/greenlight fix --run "npm test"
 ```
 
 The expected fix is a one-line change in `src/cart.ts`:
