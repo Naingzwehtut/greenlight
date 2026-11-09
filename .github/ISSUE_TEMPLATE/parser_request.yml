@@ -1,0 +1,19 @@
+name: Support a new tool
+description: Ask greenlight to understand logs from another test runner, linter or compiler
+labels: [parser]
+body:
+  - type: input
+    id: tool
+    attributes:
+      label: Tool and version
+      placeholder: go test 1.23
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: A failing log
+      description: Paste the end of a real CI log where the tool fails. Remove anything private.
+      render: text
+    validations:
+      required: true

@@ -1,0 +1,25 @@
+name: Bug report
+description: greenlight did something wrong or crashed
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Include the greenlight job log and a link to the failed run if the repository is public.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+  - type: input
+    id: version
+    attributes:
+      label: greenlight version
+      placeholder: v0.1.0
+  - type: dropdown
+    id: tool
+    attributes:
+      label: Which tool failed in CI?
+      options: [vitest, jest, tsc, eslint, pytest, mypy, ruff, other]
