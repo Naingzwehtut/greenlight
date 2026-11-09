@@ -15280,10 +15280,10 @@ async function setupSkills(ctx) {
   for (const skill of session.agent.skills) {
     try {
       const version2 = await client.beta.skills.versions.retrieve(skill.version, { skill_id: skill.skill_id });
-      let dirname3 = path2.basename(version2.name.trim());
-      if (dirname3 === "" || dirname3 === "." || dirname3 === "..")
-        dirname3 = skill.skill_id;
-      const dest = path2.resolve(skillsRoot, dirname3);
+      let dirname4 = path2.basename(version2.name.trim());
+      if (dirname4 === "" || dirname4 === "." || dirname4 === "..")
+        dirname4 = skill.skill_id;
+      const dest = path2.resolve(skillsRoot, dirname4);
       if (dest !== skillsRoot && !dest.startsWith(skillsRoot + path2.sep)) {
         log.warn("skill name escapes the skills dir; skipping", {
           component: "agent-tool-context",
@@ -60399,7 +60399,8 @@ var Budget = class {
 
 // src/safety/paths.ts
 var import_picomatch = __toESM(require_picomatch2(), 1);
-import { isAbsolute as isAbsolute2, relative, resolve as resolve2, sep } from "node:path";
+import { existsSync as existsSync3, realpathSync } from "node:fs";
+import { basename, dirname as dirname2, isAbsolute as isAbsolute2, join as join4, relative, resolve as resolve2, sep } from "node:path";
 var PathError = class extends Error {
 };
 function resolveInRoot(root, p) {
@@ -60410,7 +60411,24 @@ function resolveInRoot(root, p) {
   if (rel === "" || rel.startsWith("..") || isAbsolute2(rel)) {
     throw new PathError(`Path "${p}" is outside the repository.`);
   }
+  const real = realOrNearestParent(abs);
+  const realRoot = existsSync3(absRoot) ? realpathSync(absRoot) : absRoot;
+  const realRel = relative(realRoot, real);
+  if (realRel.startsWith("..") || isAbsolute2(realRel)) {
+    throw new PathError(`Path "${p}" resolves outside the repository.`);
+  }
   return { abs, rel: rel.split(sep).join("/") };
+}
+function realOrNearestParent(abs) {
+  let cur = abs;
+  const rest = [];
+  while (!existsSync3(cur)) {
+    const parent = dirname2(cur);
+    if (parent === cur) return abs;
+    rest.unshift(basename(cur));
+    cur = parent;
+  }
+  return join4(realpathSync(cur), ...rest);
 }
 var MANIFESTS = [
   "**/package.json",
@@ -60620,8 +60638,8 @@ var NUDGE_FINISH = "You stopped without calling finish. If you are done, call fi
 
 // src/agent/tools.ts
 var import_picomatch2 = __toESM(require_picomatch2(), 1);
-import { existsSync as existsSync3, mkdirSync, readdirSync, readFileSync as readFileSync3, statSync, writeFileSync } from "node:fs";
-import { dirname as dirname2, join as join4 } from "node:path";
+import { existsSync as existsSync4, mkdirSync, readdirSync, readFileSync as readFileSync3, statSync, writeFileSync } from "node:fs";
+import { dirname as dirname3, join as join5 } from "node:path";
 var SKIP_DIRS = /* @__PURE__ */ new Set([".git", "node_modules", "dist", "build", ".next", "coverage", "__pycache__", ".venv", "venv", ".tox", "target"]);
 var MAX_READ_LINES = 800;
 var MAX_FILE_BYTES = 1e6;
@@ -60772,7 +60790,7 @@ var err = (content) => ({ content, isError: true });
 function readFile2(ctx, p, start, end) {
   const { abs, rel } = resolveInRoot(ctx.root, p);
   if (!ctx.policy.canRead(rel)) return err(`Reading "${rel}" is not allowed.`);
-  if (!existsSync3(abs)) return err(`"${rel}" does not exist.`);
+  if (!existsSync4(abs)) return err(`"${rel}" does not exist.`);
   if (statSync(abs).isDirectory()) return err(`"${rel}" is a directory; use list_files.`);
   if (statSync(abs).size > MAX_FILE_BYTES) return err(`"${rel}" is too large to read.`);
   const lines = readFileSync3(abs, "utf8").split("\n");
@@ -60786,7 +60804,7 @@ ${body}${more}` };
 }
 function listFiles(ctx, p, depth) {
   const base = p === "." || p === "" ? { abs: ctx.root, rel: "" } : resolveInRoot(ctx.root, p);
-  if (!existsSync3(base.abs) || !statSync(base.abs).isDirectory()) return err(`"${p}" is not a directory.`);
+  if (!existsSync4(base.abs) || !statSync(base.abs).isDirectory()) return err(`"${p}" is not a directory.`);
   const out = [];
   const walk3 = (abs, rel, d) => {
     for (const entry of readdirSync(abs, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
@@ -60795,7 +60813,7 @@ function listFiles(ctx, p, depth) {
       const r = rel ? `${rel}/${entry.name}` : entry.name;
       if (entry.isDirectory()) {
         out.push(`${r}/`);
-        if (d > 1) walk3(join4(abs, entry.name), r, d - 1);
+        if (d > 1) walk3(join5(abs, entry.name), r, d - 1);
       } else {
         out.push(r);
       }
@@ -60818,7 +60836,7 @@ function search(ctx, pattern, glob2) {
       if (hits.length >= 200) return;
       if (SKIP_DIRS.has(entry.name)) continue;
       const r = rel ? `${rel}/${entry.name}` : entry.name;
-      const a = join4(abs, entry.name);
+      const a = join5(abs, entry.name);
       if (entry.isDirectory()) {
         walk3(a, r);
         continue;
@@ -60838,7 +60856,7 @@ function editFile(ctx, p, oldText, newText) {
   const { abs, rel } = resolveInRoot(ctx.root, p);
   const denied = ctx.policy.writeDenied(rel);
   if (denied) return err(`Not allowed: ${denied}`);
-  if (!existsSync3(abs)) return err(`"${rel}" does not exist. Use write_file to create files.`);
+  if (!existsSync4(abs)) return err(`"${rel}" does not exist. Use write_file to create files.`);
   const text = readFileSync3(abs, "utf8");
   const crlf = text.includes("\r\n");
   const find = crlf && !oldText.includes("\r\n") ? oldText.replace(/\n/g, "\r\n") : oldText;
@@ -60855,8 +60873,8 @@ function writeFile(ctx, p, content) {
   const { abs, rel } = resolveInRoot(ctx.root, p);
   const denied = ctx.policy.writeDenied(rel);
   if (denied) return err(`Not allowed: ${denied}`);
-  if (existsSync3(abs)) return err(`"${rel}" already exists. Use edit_file.`);
-  mkdirSync(dirname2(abs), { recursive: true });
+  if (existsSync4(abs)) return err(`"${rel}" already exists. Use edit_file.`);
+  mkdirSync(dirname3(abs), { recursive: true });
   writeFileSync(abs, content);
   ctx.changed.add(rel);
   return { content: `Created ${rel}.` };
