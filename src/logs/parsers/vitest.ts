@@ -8,7 +8,9 @@ import { normalizePath } from "../clean.js";
 // Blocks are separated by lines of "⎯" characters.
 const FAIL_HEADER = /^\s*FAIL\s+(?<file>\S+?\.(?:[cm]?[jt]sx?))\s+>\s+(?<name>.+?)\s*$/;
 const FILE_FAIL = /^\s*FAIL\s+(?<file>\S+?\.(?:[cm]?[jt]sx?))\s+\[\s*\S+\s*\]\s*$/;
-const LOCATION = /^\s*❯\s+(?<file>[^\s:]+):(?<line>\d+):(?<col>\d+)/;
+// Stack frames may carry a function name: " ❯ formatName src/users/format.ts:3:22".
+// The first frame outside node_modules is where the error was raised.
+const LOCATION = /^\s*❯\s+(?:\S+\s+)?(?<file>[^\s:]+\.\w+):(?<line>\d+):(?<col>\d+)/;
 const SEPARATOR = /^\s*⎯{3,}/;
 
 export const vitestParser: LogParser = {
@@ -31,7 +33,7 @@ export const vitestParser: LogParser = {
       const meaningful = body.filter((l) => l.trim() !== "");
       if (meaningful.length === 0) continue;
 
-      const loc = body.map((l) => LOCATION.exec(l)).find((m) => m?.groups);
+      const loc = body.map((l) => LOCATION.exec(l)).find((m) => m?.groups && !m.groups.file!.includes("node_modules"));
       const message = meaningful
         .filter((l) => !LOCATION.test(l))
         .slice(0, 25)
