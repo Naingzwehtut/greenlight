@@ -25,7 +25,10 @@ export const pytestParser: LogParser = {
       const id = m.groups.id!;
       const [filePart, ...rest] = id.split("::");
       const testName = rest.join("::");
-      const block = blocks.get(testName.replace(/::/g, ".")) ?? blocks.get(testName.split("::").pop() ?? "");
+      // Collection errors ("ERROR tests/x.py") have a block titled "ERROR collecting tests/x.py".
+      const block = testName
+        ? (blocks.get(testName.replace(/::/g, ".")) ?? blocks.get(testName.split("::").pop() ?? ""))
+        : blocks.get(`collecting ${filePart}`);
       const loc = block?.map((l) => LOCATION.exec(l.trim())).find((x) => x?.groups);
       const eLines = block?.filter((l) => /^E\s/.test(l)).map((l) => l.slice(1).trim()) ?? [];
       out.push({
