@@ -1,0 +1,37 @@
+# Copy this file to .github/workflows/greenlight.yml in your repository.
+# It runs after your CI workflow finishes and only acts when CI failed.
+name: greenlight
+
+on:
+  workflow_run:
+    workflows: [CI] # the `name:` of your CI workflow
+    types: [completed]
+
+permissions:
+  contents: write # push the fix branch
+  pull-requests: write # open the fix PR and comment on the failing PR
+  actions: read # download the failed job logs
+
+concurrency:
+  group: greenlight-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
+jobs:
+  fix:
+    if: github.event.workflow_run.conclusion == 'failure'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      # Set up the same toolchain your CI uses so greenlight can run your checks.
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - uses: Naingzwehtut/greenlight@v0
+        with:
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # mode: comment   # start with diagnosis only, if you prefer
