@@ -1,3 +1,6 @@
+import { mkdtempSync, symlinkSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { loadConfig } from "../src/config.js";
 import { Budget, BudgetExceeded } from "../src/safety/budget.js";
@@ -12,6 +15,20 @@ describe("resolveInRoot", () => {
 
   it.each(["../etc/passwd", "/etc/passwd", "src/../../x", "", "."])("rejects %j", (p) => {
     expect(() => resolveInRoot("/repo", p)).toThrow(PathError);
+  });
+
+  it("rejects symlinks that point outside the repo", () => {
+    const outside = mkdtempSync(join(tmpdir(), "greenlight-outside-"));
+    writeFileSync(join(outside, "secret.txt"), "x");
+    const root = mkdtempSync(join(tmpdir(), "greenlight-root-"));
+    try {
+      symlinkSync(outside, join(root, "link"), "junction");
+    } catch {
+      return; // symlinks not permitted on this machine
+    }
+    expect(() => resolveInRoot(root, "link/secret.txt")).toThrow(/resolves outside/);
+    expect(() => resolveInRoot(root, "link/new-file.txt")).toThrow(/resolves outside/);
+    expect(resolveInRoot(root, "src/new.ts").rel).toBe("src/new.ts");
   });
 });
 

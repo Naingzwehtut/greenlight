@@ -1,4 +1,5 @@
-import { isAbsolute, relative, resolve, sep } from "node:path";
+import { existsSync, realpathSync } from "node:fs";
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import picomatch from "picomatch";
 import { DEFAULT_DENY, TEST_FILE_GLOBS, type Config } from "../config.js";
 
@@ -16,7 +17,27 @@ export function resolveInRoot(root: string, p: string): { abs: string; rel: stri
   if (rel === "" || rel.startsWith("..") || isAbsolute(rel)) {
     throw new PathError(`Path "${p}" is outside the repository.`);
   }
+  // A symlink inside the repo could point outside it; check the real location too.
+  const real = realOrNearestParent(abs);
+  const realRoot = existsSync(absRoot) ? realpathSync(absRoot) : absRoot;
+  const realRel = relative(realRoot, real);
+  if (realRel.startsWith("..") || isAbsolute(realRel)) {
+    throw new PathError(`Path "${p}" resolves outside the repository.`);
+  }
   return { abs, rel: rel.split(sep).join("/") };
+}
+
+/** realpath of the path, or of its closest existing parent for files not created yet. */
+function realOrNearestParent(abs: string): string {
+  let cur = abs;
+  const rest: string[] = [];
+  while (!existsSync(cur)) {
+    const parent = dirname(cur);
+    if (parent === cur) return abs;
+    rest.unshift(basename(cur));
+    cur = parent;
+  }
+  return join(realpathSync(cur), ...rest);
 }
 
 export interface PathPolicy {
