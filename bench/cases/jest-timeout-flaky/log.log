@@ -1,0 +1,15 @@
+FAIL src/api/client.test.ts (6.12 s)
+  ● client › retries on 503
+
+    thrown: "Exceeded timeout of 5000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      18 |   });
+      19 |
+    > 20 |   it("retries on 503", async () => {
+         |   ^
+
+      at it (src/api/client.test.ts:20:3)
+
+Test Suites: 1 failed, 4 passed, 5 total
+Tests:       1 failed, 31 passed, 32 total

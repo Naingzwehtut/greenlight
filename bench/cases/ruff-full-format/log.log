@@ -1,0 +1,8 @@
+src/app.py:1:8: F401 [*] `os` imported but unused
+F841 Local variable `x` is assigned to but never used
+ --> src/util.py:7:5
+  |
+7 |     x = 1
+  |     ^
+Found 2 errors.
+[*] 1 fixable with the `--fix` option.

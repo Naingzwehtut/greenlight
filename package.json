@@ -37,7 +37,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "bench": "node --experimental-strip-types bench/run.ts",
+    "bench": "tsx bench/run.ts",
     "check": "npm run typecheck && npm test"
   },
   "dependencies": {
@@ -52,6 +52,7 @@
     "@types/node": "^24.19.2",
     "@types/picomatch": "^4.0.3",
     "esbuild": "^0.28.2",
+    "tsx": "^4.23.15",
     "typescript": "^5.9.3",
     "vitest": "^5.1.0"
   }

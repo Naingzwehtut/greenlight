@@ -1,0 +1,1 @@
+{ "category": "type", "fixable": true, "count": 3, "files": ["src/api/user.ts", "src/index.ts"] }

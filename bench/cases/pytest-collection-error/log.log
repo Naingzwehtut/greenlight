@@ -1,0 +1,13 @@
+============================= test session starts ==============================
+collected 3 items / 1 error
+
+==================================== ERRORS ====================================
+____________________ ERROR collecting tests/test_report.py _____________________
+ImportError while importing test module '/home/runner/work/app/app/tests/test_report.py'.
+tests/test_report.py:2: in <module>
+    from app.report import build_report
+E   ImportError: cannot import name 'build_report' from 'app.report' (/home/runner/work/app/app/app/report.py)
+=========================== short test summary info ============================
+ERROR tests/test_report.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+=============================== 1 error in 0.21s ===============================

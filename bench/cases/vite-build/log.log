@@ -1,0 +1,8 @@
+> vite build
+vite v6.3.5 building for production...
+transforming...
+✓ 41 modules transformed.
+x Build failed in 312ms
+error during build:
+[vite]: Rollup failed to resolve import "./components/Chart" from "src/App.tsx".
+##[error]Process completed with exit code 1.

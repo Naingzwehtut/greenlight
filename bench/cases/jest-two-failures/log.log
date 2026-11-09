@@ -1,0 +1,35 @@
+> demo@1.0.0 test
+> jest
+
+PASS src/strings.test.js
+FAIL src/cart.test.js
+  ● Cart › applies discount
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 90
+    Received: 100
+
+      12 |     const cart = new Cart();
+      13 |     cart.add({ price: 100 });
+    > 14 |     expect(cart.total({ discount: 0.1 })).toBe(90);
+         |                                           ^
+      15 |   });
+
+      at Object.toBe (src/cart.test.js:14:43)
+
+  ● Cart › empty cart total is zero
+
+    TypeError: Cannot read properties of undefined (reading 'reduce')
+
+      5 |   total(opts = {}) {
+    > 6 |     return this.items.reduce((s, i) => s + i.price, 0);
+        |                       ^
+
+      at Cart.reduce [as total] (src/cart.js:6:23)
+      at Object.total (src/cart.test.js:20:17)
+
+Test Suites: 1 failed, 1 passed, 2 total
+Tests:       2 failed, 6 passed, 8 total
+Snapshots:   0 total
+Time:        1.204 s

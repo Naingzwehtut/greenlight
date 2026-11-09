@@ -1,0 +1,1 @@
+{ "category": "lint", "fixable": true, "count": 2, "files": ["src/utils.ts", "src/app.ts"] }

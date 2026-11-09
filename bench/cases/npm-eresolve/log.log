@@ -1,0 +1,6 @@
+Run docker build -t app .
+#5 [2/4] RUN npm ci
+#5 ERROR: failed to solve: process "/bin/sh -c npm ci" did not complete successfully: exit code: 1
+npm ERR! code ERESOLVE
+npm ERR! ERESOLVE unable to resolve dependency tree
+##[error]Process completed with exit code 1.

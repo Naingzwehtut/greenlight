@@ -1,0 +1,10 @@
+> eslint .
+
+/home/runner/work/demo/demo/src/utils.ts
+   4:7   error    'unused' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  10:3   warning  Unexpected console statement                 no-console
+
+/home/runner/work/demo/demo/src/app.ts
+  21:15  error  Expected '===' and instead saw '=='  eqeqeq
+
+✖ 3 problems (2 errors, 1 warning)

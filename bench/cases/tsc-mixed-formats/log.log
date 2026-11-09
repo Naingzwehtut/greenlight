@@ -1,0 +1,12 @@
+> demo@1.0.0 typecheck
+> tsc --noEmit
+
+src/api/user.ts(14,5): error TS2322: Type 'string' is not assignable to type 'number'.
+src/api/user.ts(22,18): error TS2339: Property 'emial' does not exist on type 'User'.
+src/index.ts:3:10 - error TS2305: Module '"./api/user"' has no exported member 'getUsr'.
+
+3 import { getUsr } from "./api/user";
+           ~~~~~~
+
+Found 3 errors in 2 files.
+##[error]Process completed with exit code 2.
