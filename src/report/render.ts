@@ -80,7 +80,9 @@ export function renderReport(input: RenderInput): string {
   return lines.join("\n");
 }
 
-export function confidenceBar(c: number): string {
+export function confidenceBar(value: number): string {
+  // String.repeat throws on a negative count, so never let a bad value reach it.
+  const c = Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : 0;
   const pct = Math.round(c * 100);
   const filled = Math.round(c * 10);
   return `${"█".repeat(filled)}${"░".repeat(10 - filled)} ${pct}%`;
