@@ -78,21 +78,36 @@ export async function openPullRequest(
   repo: Repo,
   opts: { head: string; base: string; title: string; body: string; labels: string[] },
 ): Promise<{ number: number; url: string }> {
-  const { data } = await octokit.rest.pulls.create({
-    ...repo,
-    head: opts.head,
-    base: opts.base,
-    title: opts.title,
-    body: opts.body,
-  });
+  // Re-running a failed workflow reuses the run id, and so the branch name. If greenlight
+  // already opened a PR from that branch, refresh it instead of failing on a duplicate.
+  const existing = await findOpenPullRequest(octokit, repo, opts.head, opts.base);
+  let pr: { number: number; html_url: string };
+  if (existing) {
+    const { data } = await octokit.rest.pulls.update({ ...repo, pull_number: existing, title: opts.title, body: opts.body });
+    pr = data;
+  } else {
+    const { data } = await octokit.rest.pulls.create({
+      ...repo,
+      head: opts.head,
+      base: opts.base,
+      title: opts.title,
+      body: opts.body,
+    });
+    pr = data;
+  }
   if (opts.labels.length) {
     try {
-      await octokit.rest.issues.addLabels({ ...repo, issue_number: data.number, labels: opts.labels });
+      await octokit.rest.issues.addLabels({ ...repo, issue_number: pr.number, labels: opts.labels });
     } catch {
       // Labels are optional; a missing permission should not fail the run.
     }
   }
-  return { number: data.number, url: data.html_url };
+  return { number: pr.number, url: pr.html_url };
+}
+
+async function findOpenPullRequest(octokit: Octokit, repo: Repo, head: string, base: string): Promise<number | undefined> {
+  const { data } = await octokit.rest.pulls.list({ ...repo, state: "open", head: `${repo.owner}:${head}`, base, per_page: 1 });
+  return data[0]?.number;
 }
 
 /** The open PR (if any) for a branch, used when a run's pull_requests list is empty. */

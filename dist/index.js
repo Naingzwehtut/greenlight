@@ -84481,20 +84481,32 @@ async function upsertComment(octokit, repo, issueNumber, body) {
   return data.html_url;
 }
 async function openPullRequest(octokit, repo, opts) {
-  const { data } = await octokit.rest.pulls.create({
-    ...repo,
-    head: opts.head,
-    base: opts.base,
-    title: opts.title,
-    body: opts.body
-  });
+  const existing = await findOpenPullRequest(octokit, repo, opts.head, opts.base);
+  let pr;
+  if (existing) {
+    const { data } = await octokit.rest.pulls.update({ ...repo, pull_number: existing, title: opts.title, body: opts.body });
+    pr = data;
+  } else {
+    const { data } = await octokit.rest.pulls.create({
+      ...repo,
+      head: opts.head,
+      base: opts.base,
+      title: opts.title,
+      body: opts.body
+    });
+    pr = data;
+  }
   if (opts.labels.length) {
     try {
-      await octokit.rest.issues.addLabels({ ...repo, issue_number: data.number, labels: opts.labels });
+      await octokit.rest.issues.addLabels({ ...repo, issue_number: pr.number, labels: opts.labels });
     } catch {
     }
   }
-  return { number: data.number, url: data.html_url };
+  return { number: pr.number, url: pr.html_url };
+}
+async function findOpenPullRequest(octokit, repo, head, base) {
+  const { data } = await octokit.rest.pulls.list({ ...repo, state: "open", head: `${repo.owner}:${head}`, base, per_page: 1 });
+  return data[0]?.number;
 }
 async function findPullRequestForBranch(octokit, repo, branch) {
   const { data } = await octokit.rest.pulls.list({ ...repo, state: "open", head: `${repo.owner}:${branch}`, per_page: 1 });
