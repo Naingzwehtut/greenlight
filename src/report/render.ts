@@ -52,7 +52,7 @@ export function renderReport(input: RenderInput): string {
 
   if (attempt?.checks.length) {
     lines.push("| Check | Result |", "| --- | --- |");
-    for (const c of attempt.checks) lines.push(`| \`${c.command}\` | ${c.passed ? "✅ pass" : "❌ fail"} |`);
+    for (const c of attempt.checks) lines.push(`| ${codeCell(c.command)} | ${c.passed ? "✅ pass" : "❌ fail"} |`);
     lines.push("");
   }
 
@@ -82,6 +82,18 @@ export function confidenceBar(c: number): string {
   const pct = Math.round(c * 100);
   const filled = Math.round(c * 10);
   return `${"█".repeat(filled)}${"░".repeat(10 - filled)} ${pct}%`;
+}
+
+/**
+ * Inline code inside a table cell. GitHub splits cells on "|" even inside backticks,
+ * so pipes are escaped, and a command containing backticks gets a longer fence.
+ */
+export function codeCell(s: string): string {
+  const text = s.replace(/\r?\n/g, " ").replace(/\|/g, "\\|");
+  const longest = Math.max(0, ...(text.match(/`+/g) ?? []).map((m) => m.length));
+  const fence = "`".repeat(longest + 1);
+  const pad = text.startsWith("`") || text.endsWith("`") ? " " : "";
+  return `${fence}${pad}${text}${pad}${fence}`;
 }
 
 function escapeMd(s: string): string {

@@ -60336,7 +60336,7 @@ function renderReport(input2) {
   }
   if (attempt?.checks.length) {
     lines.push("| Check | Result |", "| --- | --- |");
-    for (const c of attempt.checks) lines.push(`| \`${c.command}\` | ${c.passed ? "\u2705 pass" : "\u274C fail"} |`);
+    for (const c of attempt.checks) lines.push(`| ${codeCell(c.command)} | ${c.passed ? "\u2705 pass" : "\u274C fail"} |`);
     lines.push("");
   }
   if (attempt?.violations.length) {
@@ -60362,6 +60362,13 @@ function confidenceBar(c) {
   const pct = Math.round(c * 100);
   const filled = Math.round(c * 10);
   return `${"\u2588".repeat(filled)}${"\u2591".repeat(10 - filled)} ${pct}%`;
+}
+function codeCell(s) {
+  const text = s.replace(/\r?\n/g, " ").replace(/\|/g, "\\|");
+  const longest = Math.max(0, ...(text.match(/`+/g) ?? []).map((m) => m.length));
+  const fence = "`".repeat(longest + 1);
+  const pad = text.startsWith("`") || text.endsWith("`") ? " " : "";
+  return `${fence}${pad}${text}${pad}${fence}`;
 }
 function escapeMd(s) {
   return s.replace(/([|`*_<>])/g, "\\$1");
