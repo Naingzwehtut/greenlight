@@ -84712,16 +84712,19 @@ function resolveInRoot(root, p) {
   const absRoot = resolve2(root);
   const abs = resolve2(absRoot, p);
   const rel = relative(absRoot, abs);
-  if (rel === "" || rel.startsWith("..") || isAbsolute2(rel)) {
+  if (rel === "" || escapes(rel)) {
     throw new PathError(`Path "${p}" is outside the repository.`);
   }
   const real = realOrNearestParent(abs);
   const realRoot = existsSync5(absRoot) ? realpathSync(absRoot) : absRoot;
   const realRel = relative(realRoot, real);
-  if (realRel.startsWith("..") || isAbsolute2(realRel)) {
+  if (escapes(realRel)) {
     throw new PathError(`Path "${p}" resolves outside the repository.`);
   }
   return { abs, rel: rel.split(sep2).join("/") };
+}
+function escapes(rel) {
+  return rel === ".." || rel.startsWith(`..${sep2}`) || rel.startsWith("../") || isAbsolute2(rel);
 }
 function realOrNearestParent(abs) {
   let cur = abs;

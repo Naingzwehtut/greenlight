@@ -14,17 +14,25 @@ export function resolveInRoot(root: string, p: string): { abs: string; rel: stri
   const absRoot = resolve(root);
   const abs = resolve(absRoot, p);
   const rel = relative(absRoot, abs);
-  if (rel === "" || rel.startsWith("..") || isAbsolute(rel)) {
+  if (rel === "" || escapes(rel)) {
     throw new PathError(`Path "${p}" is outside the repository.`);
   }
   // A symlink inside the repo could point outside it; check the real location too.
   const real = realOrNearestParent(abs);
   const realRoot = existsSync(absRoot) ? realpathSync(absRoot) : absRoot;
   const realRel = relative(realRoot, real);
-  if (realRel.startsWith("..") || isAbsolute(realRel)) {
+  if (escapes(realRel)) {
     throw new PathError(`Path "${p}" resolves outside the repository.`);
   }
   return { abs, rel: rel.split(sep).join("/") };
+}
+
+/**
+ * Whether a path from `relative()` leaves its base. Only a leading ".." segment does;
+ * a file or folder whose name merely starts with dots (such as "..config") stays inside.
+ */
+function escapes(rel: string): boolean {
+  return rel === ".." || rel.startsWith(`..${sep}`) || rel.startsWith("../") || isAbsolute(rel);
 }
 
 /** realpath of the path, or of its closest existing parent for files not created yet. */

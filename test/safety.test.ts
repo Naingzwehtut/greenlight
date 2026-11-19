@@ -13,7 +13,12 @@ describe("resolveInRoot", () => {
     expect(resolveInRoot("/repo", "./src/../src/a.ts").rel).toBe("src/a.ts");
   });
 
-  it.each(["../etc/passwd", "/etc/passwd", "src/../../x", "", "."])("rejects %j", (p) => {
+  it("accepts names that start with two dots", () => {
+    expect(resolveInRoot("/repo", "..config.ts").rel).toBe("..config.ts");
+    expect(resolveInRoot("/repo", "src/..hidden/a.ts").rel).toBe("src/..hidden/a.ts");
+  });
+
+  it.each(["../etc/passwd", "/etc/passwd", "src/../../x", "..", "", "."])("rejects %j", (p) => {
     expect(() => resolveInRoot("/repo", p)).toThrow(PathError);
   });
 
