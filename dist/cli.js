@@ -11377,10 +11377,10 @@ function startToolRunnerSpan(client, params, conversationId) {
     }
   });
 }
-async function withToolUseSpan(client, tool, toolUse, options, run) {
+async function withToolUseSpan(client, tool, toolUse, options, run2) {
   const tracer = client._tracer;
   if (!tracer)
-    return run();
+    return run2();
   const { signal, conversationId, sessionID, parentContext = context.active() } = options;
   const description = "description" in tool ? tool.description : void 0;
   const attributes = {
@@ -11400,10 +11400,10 @@ async function withToolUseSpan(client, tool, toolUse, options, run) {
   const operation = toolUse.type === "agent.tool_use" ? "anthropic.tool_use" : wasCreatedByStainlessHelper(tool) && tool[SDK_HELPER_SYMBOL] === "mcpTool" ? "anthropic.mcp_tool_use" : "anthropic.custom_tool_use";
   const span = guardTracing(client, () => tracer.startSpan(`${operation} ${toolUse.name}`, { kind: SpanKind.INTERNAL, attributes }, parentContext));
   if (!span)
-    return run();
+    return run2();
   let result;
   try {
-    result = await context.with(trace.setSpan(parentContext, span), run);
+    result = await context.with(trace.setSpan(parentContext, span), run2);
     return result;
   } finally {
     const succeeded = result !== void 0 && !result.isError;
@@ -15078,7 +15078,7 @@ var init_utils3 = __esm({
 
 // node_modules/@anthropic-ai/sdk/helpers/beta/json-schema.mjs
 function betaTool(options) {
-  const { name, inputSchema, description, run, ...extraProps } = options;
+  const { name, inputSchema, description, run: run2, ...extraProps } = options;
   if (inputSchema.type !== "object") {
     throw new Error(`JSON schema for tool "${name}" must be an object, but got ${inputSchema.type}`);
   }
@@ -15088,7 +15088,7 @@ function betaTool(options) {
     name,
     input_schema: inputSchema,
     description,
-    run,
+    run: run2,
     parse: (content) => content
   };
 }
@@ -29680,15 +29680,15 @@ async function generateToolResponse(params, runnable, available, lastMessage, re
       const sequence = sequences.get(family) ?? { tail: Promise.resolve(), failed: false };
       sequences.set(family, sequence);
       const registered = params.tools.some((t) => isRunnableToolset(t) && toolsetFamily(t) === family);
-      const run = started ?? sequence.tail.then(() => sequence.failed ? toolsetResultBlock(toolUse, notExecutedText(family), true) : runToolsetCall(params, family, toolUse, requestOptions, client, toolOtelContext));
-      sequence.tail = run.then(({ is_error }) => {
+      const run2 = started ?? sequence.tail.then(() => sequence.failed ? toolsetResultBlock(toolUse, notExecutedText(family), true) : runToolsetCall(params, family, toolUse, requestOptions, client, toolOtelContext));
+      sequence.tail = run2.then(({ is_error }) => {
         if (is_error && registered)
           sequence.failed = true;
       }, () => {
         sequence.failed = true;
       });
-      calls?.set(toolUse.id, { status: "started", result: run });
-      return run;
+      calls?.set(toolUse.id, { status: "started", result: run2 });
+      return run2;
     }
     if (started) {
       return started;
@@ -59481,7 +59481,7 @@ function visit(schema, fnOrHandlers) {
     return h ? h(node2, rewritten) : node2;
   };
   const cache = /* @__PURE__ */ new Map();
-  function run(s) {
+  function run2(s) {
     const cached2 = cache.get(s);
     if (cached2 === RESOLVING) {
       return new $ZodLazy({
@@ -59507,21 +59507,21 @@ function visit(schema, fnOrHandlers) {
         let changed = false;
         const newShape = {};
         for (const k of keys) {
-          const mapped = run(oldShape[k]);
+          const mapped = run2(oldShape[k]);
           if (mapped !== oldShape[k])
             changed = true;
           newShape[k] = mapped;
         }
         let newCatchall = def.catchall;
         if (def.catchall) {
-          newCatchall = run(def.catchall);
+          newCatchall = run2(def.catchall);
           if (newCatchall !== def.catchall)
             changed = true;
         }
         return changed ? clone(s, { ...def, shape: newShape, catchall: newCatchall }) : s;
       }
       case "array": {
-        const mapped = run(def.element);
+        const mapped = run2(def.element);
         return mapped === def.element ? s : clone(s, { ...def, element: mapped });
       }
       case "tuple": {
@@ -59529,14 +59529,14 @@ function visit(schema, fnOrHandlers) {
         let changed = false;
         const newItems = [];
         for (const item of oldItems) {
-          const mapped = run(item);
+          const mapped = run2(item);
           if (mapped !== item)
             changed = true;
           newItems.push(mapped);
         }
         let newRest = def.rest;
         if (def.rest) {
-          newRest = run(def.rest);
+          newRest = run2(def.rest);
           if (newRest !== def.rest)
             changed = true;
         }
@@ -59544,12 +59544,12 @@ function visit(schema, fnOrHandlers) {
       }
       case "record":
       case "map": {
-        const newKey = run(def.keyType);
-        const newVal = run(def.valueType);
+        const newKey = run2(def.keyType);
+        const newVal = run2(def.valueType);
         return newKey === def.keyType && newVal === def.valueType ? s : clone(s, { ...def, keyType: newKey, valueType: newVal });
       }
       case "set": {
-        const newVal = run(def.valueType);
+        const newVal = run2(def.valueType);
         return newVal === def.valueType ? s : clone(s, { ...def, valueType: newVal });
       }
       case "union": {
@@ -59557,7 +59557,7 @@ function visit(schema, fnOrHandlers) {
         let changed = false;
         const newOptions = [];
         for (const opt of oldOptions) {
-          const mapped = run(opt);
+          const mapped = run2(opt);
           if (mapped !== opt)
             changed = true;
           newOptions.push(mapped);
@@ -59565,8 +59565,8 @@ function visit(schema, fnOrHandlers) {
         return changed ? clone(s, { ...def, options: newOptions }) : s;
       }
       case "intersection": {
-        const newLeft = run(def.left);
-        const newRight = run(def.right);
+        const newLeft = run2(def.left);
+        const newRight = run2(def.right);
         return newLeft === def.left && newRight === def.right ? s : clone(s, { ...def, left: newLeft, right: newRight });
       }
       case "optional":
@@ -59578,23 +59578,23 @@ function visit(schema, fnOrHandlers) {
       case "nonoptional":
       case "promise":
       case "success": {
-        const newInner = run(def.innerType);
+        const newInner = run2(def.innerType);
         return newInner === def.innerType ? s : clone(s, { ...def, innerType: newInner });
       }
       case "pipe": {
-        const newIn = run(def.in);
-        const newOut = run(def.out);
+        const newIn = run2(def.in);
+        const newOut = run2(def.out);
         return newIn === def.in && newOut === def.out ? s : clone(s, { ...def, in: newIn, out: newOut });
       }
       case "function": {
-        const newInput = run(def.input);
-        const newOutput = run(def.output);
+        const newInput = run2(def.input);
+        const newOutput = run2(def.output);
         return newInput === def.input && newOutput === def.output ? s : clone(s, { ...def, input: newInput, output: newOutput });
       }
       case "lazy": {
         const original = def.getter;
         const { _cachedInner, ...rest } = def;
-        return clone(s, { ...rest, getter: () => run(original()) });
+        return clone(s, { ...rest, getter: () => run2(original()) });
       }
       // A leaf by choice: `parts` are regex fragments, not data positions.
       case "template_literal":
@@ -59625,7 +59625,7 @@ function visit(schema, fnOrHandlers) {
       }
     }
   }
-  return run(schema);
+  return run2(schema);
 }
 
 // node_modules/zod/v4/classic/deep-partial.js
@@ -60530,11 +60530,15 @@ function appendCapped(output2, chunk, max = MAX_OUTPUT) {
   return "(earlier output dropped) \u2026\n" + (firstNl >= 0 ? cut.slice(firstNl + 1) : cut);
 }
 function runCommand(command, opts) {
+  return run(command, [], true, command, opts);
+}
+function run(file2, args, shell, label, opts) {
+  const command = label;
   const started = Date.now();
   return new Promise((resolve4) => {
-    const child = spawn2(command, {
+    const child = spawn2(file2, args, {
       cwd: opts.cwd,
-      shell: true,
+      shell,
       env: { ...process.env, CI: "true", FORCE_COLOR: "0", NO_COLOR: "1", ...opts.env },
       stdio: ["ignore", "pipe", "pipe"]
     });
