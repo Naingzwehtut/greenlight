@@ -98,3 +98,14 @@ describe("diff block", () => {
     expect(lines.at(-2)).toMatch(/^\+line number \d+$/);
   });
 });
+
+describe("confidenceBar", () => {
+  it.each([
+    [1.5, "██████████ 100%"],
+    [-0.2, "░░░░░░░░░░ 0%"],
+    [Number.NaN, "░░░░░░░░░░ 0%"],
+    [0.55, "██████░░░░ 55%"],
+  ])("renders %s without throwing", (c, bar) => {
+    expect(confidenceBar(c)).toBe(bar);
+  });
+});

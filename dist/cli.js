@@ -60359,7 +60359,8 @@ function renderReport(input2) {
   }
   return lines.join("\n");
 }
-function confidenceBar(c) {
+function confidenceBar(value) {
+  const c = Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : 0;
   const pct = Math.round(c * 100);
   const filled = Math.round(c * 10);
   return `${"\u2588".repeat(filled)}${"\u2591".repeat(10 - filled)} ${pct}%`;
