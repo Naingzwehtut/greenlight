@@ -4,7 +4,7 @@ import type { ChatSession, Provider, ToolResult, TurnInput } from "../providers/
 import { Budget, BudgetExceeded } from "../safety/budget.js";
 import { createPathPolicy } from "../safety/paths.js";
 import { describeViolations, findTampering, type Violation } from "../safety/tampering.js";
-import { runCommand } from "../util/exec.js";
+import { runCommand, runProgram } from "../util/exec.js";
 import { silentLogger, type Logger } from "../util/logger.js";
 import { buildCommandSet } from "./commands.js";
 import { NUDGE_FINISH, systemPrompt, userPrompt } from "./prompts.js";
@@ -167,10 +167,11 @@ async function verify(
 
 export async function gitDiff(root: string, newFiles: string[]): Promise<string> {
   // Intent-to-add makes new files show up in `git diff`.
+  // No shell: the file names come from the model.
   if (newFiles.length) {
-    await runCommand(`git add --intent-to-add -- ${newFiles.map((f) => `"${f}"`).join(" ")}`, { cwd: root, timeoutSec: 30 });
+    await runProgram("git", ["add", "--intent-to-add", "--", ...newFiles], { cwd: root, timeoutSec: 30 });
   }
-  const r = await runCommand("git diff --no-color --no-ext-diff", { cwd: root, timeoutSec: 60 });
+  const r = await runProgram("git", ["diff", "--no-color", "--no-ext-diff"], { cwd: root, timeoutSec: 60 });
   return r.output;
 }
 
