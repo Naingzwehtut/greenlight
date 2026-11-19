@@ -1,0 +1,37 @@
+import { describe, expect, it } from "vitest";
+import { findTampering, parseUnifiedDiff } from "../src/safety/tampering.js";
+
+describe("parseUnifiedDiff", () => {
+  it("treats lines that look like headers inside a hunk as content", () => {
+    const d = [
+      "diff --git a/src/a.c b/src/a.c",
+      "--- a/src/a.c",
+      "+++ b/src/a.c",
+      "@@ -1,2 +1,2 @@",
+      "---counter;",
+      "+++counter;",
+    ].join("\n");
+    const [f] = parseUnifiedDiff(d);
+    expect(f!.removed).toEqual(["--counter;"]);
+    expect(f!.added).toEqual(["++counter;"]);
+  });
+
+  it("still flags a removed assertion that starts with dashes", () => {
+    const d = [
+      "diff --git a/tests/test_a.py b/tests/test_a.py",
+      "--- a/tests/test_a.py",
+      "+++ b/tests/test_a.py",
+      "@@ -1,2 +1,1 @@",
+      "--- assert total == 3",
+    ].join("\n");
+    expect(findTampering(d, () => true).map((v) => v.rule)).toEqual(["remove-assertion"]);
+  });
+
+  it("reads several files", () => {
+    const one = (f: string) => `diff --git a/${f} b/${f}\n--- a/${f}\n+++ b/${f}\n@@ -1 +1 @@\n-a\n+b`;
+    expect(parseUnifiedDiff(`${one("x.ts")}\n${one("y.ts")}`).map((f) => [f.file, f.added, f.removed])).toEqual([
+      ["x.ts", ["b"], ["a"]],
+      ["y.ts", ["b"], ["a"]],
+    ]);
+  });
+});

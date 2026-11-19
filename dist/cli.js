@@ -60473,17 +60473,19 @@ var RULES = [
 function parseUnifiedDiff(diff) {
   const files = [];
   let cur;
+  let inHunk = false;
   for (const line of diff.split("\n")) {
     if (line.startsWith("diff --git ")) {
       const m = / b\/(.+)$/.exec(line);
       cur = { file: m?.[1] ?? "", added: [], removed: [], deleted: false };
       files.push(cur);
+      inHunk = false;
     } else if (!cur) {
       continue;
-    } else if (line.startsWith("deleted file mode")) {
-      cur.deleted = true;
-    } else if (line.startsWith("+++") || line.startsWith("---")) {
-      continue;
+    } else if (line.startsWith("@@")) {
+      inHunk = true;
+    } else if (!inHunk) {
+      if (line.startsWith("deleted file mode")) cur.deleted = true;
     } else if (line.startsWith("+")) {
       cur.added.push(line.slice(1));
     } else if (line.startsWith("-")) {
