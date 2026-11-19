@@ -83,10 +83,12 @@ export const CONFIG_FILES = [".greenlight.yml", ".greenlight.yaml", ".github/gre
 /** Read the repo's config file (if any), then apply overrides such as Action inputs. */
 export function loadConfig(cwd: string, overrides: Record<string, unknown> = {}): Config {
   let fromFile: Record<string, unknown> = {};
+  let source: string | undefined;
   for (const name of CONFIG_FILES) {
     const p = join(cwd, name);
     if (existsSync(p)) {
-      fromFile = (parseYaml(readFileSync(p, "utf8")) as Record<string, unknown>) ?? {};
+      fromFile = readConfigFile(p, name);
+      source = name;
       break;
     }
   }
@@ -94,9 +96,24 @@ export function loadConfig(cwd: string, overrides: Record<string, unknown> = {})
   const result = ConfigSchema.safeParse(merged);
   if (!result.success) {
     const issues = result.error.issues.map((i) => `  - ${i.path.join(".") || "(root)"}: ${i.message}`).join("\n");
-    throw new Error(`Invalid greenlight config:\n${issues}`);
+    throw new Error(`Invalid greenlight config${source ? ` (${source} and inputs)` : ""}:\n${issues}`);
   }
   return result.data;
+}
+
+function readConfigFile(path: string, name: string): Record<string, unknown> {
+  let parsed: unknown;
+  try {
+    parsed = parseYaml(readFileSync(path, "utf8"));
+  } catch (e) {
+    throw new Error(`Could not parse ${name}: ${e instanceof Error ? e.message : String(e)}`);
+  }
+  // An empty file (or one with only comments) means "use the defaults".
+  if (parsed === null || parsed === undefined) return {};
+  if (typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error(`${name} must be a mapping of settings (key: value), not ${Array.isArray(parsed) ? "a list" : `a ${typeof parsed}`}.`);
+  }
+  return parsed as Record<string, unknown>;
 }
 
 export function resolveModel(cfg: Config): string {

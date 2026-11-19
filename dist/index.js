@@ -84280,10 +84280,12 @@ var DEFAULT_MODELS = {
 var CONFIG_FILES = [".greenlight.yml", ".greenlight.yaml", ".github/greenlight.yml"];
 function loadConfig(cwd, overrides = {}) {
   let fromFile = {};
+  let source;
   for (const name of CONFIG_FILES) {
     const p = join2(cwd, name);
     if (existsSync4(p)) {
-      fromFile = (0, import_yaml.parse)(readFileSync3(p, "utf8")) ?? {};
+      fromFile = readConfigFile(p, name);
+      source = name;
       break;
     }
   }
@@ -84291,10 +84293,23 @@ function loadConfig(cwd, overrides = {}) {
   const result = ConfigSchema.safeParse(merged);
   if (!result.success) {
     const issues = result.error.issues.map((i) => `  - ${i.path.join(".") || "(root)"}: ${i.message}`).join("\n");
-    throw new Error(`Invalid greenlight config:
+    throw new Error(`Invalid greenlight config${source ? ` (${source} and inputs)` : ""}:
 ${issues}`);
   }
   return result.data;
+}
+function readConfigFile(path4, name) {
+  let parsed;
+  try {
+    parsed = (0, import_yaml.parse)(readFileSync3(path4, "utf8"));
+  } catch (e) {
+    throw new Error(`Could not parse ${name}: ${e instanceof Error ? e.message : String(e)}`);
+  }
+  if (parsed === null || parsed === void 0) return {};
+  if (typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error(`${name} must be a mapping of settings (key: value), not ${Array.isArray(parsed) ? "a list" : `a ${typeof parsed}`}.`);
+  }
+  return parsed;
 }
 function resolveModel(cfg) {
   return cfg.model ?? DEFAULT_MODELS[cfg.provider];
