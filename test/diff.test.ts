@@ -53,3 +53,22 @@ describe("skip-test rule", () => {
     expect(added("const skipped = items.filter(skipIfEmpty);")).toEqual([]);
   });
 });
+
+describe("silence-lint rule", () => {
+  const added = (file: string, line: string) =>
+    findTampering(`diff --git a/${file} b/${file}\n--- a/${file}\n+++ b/${file}\n@@ -1 +1 @@\n+${line}`, () => false).map((v) => v.rule);
+
+  it.each([
+    ["src/app.py", "def f():  # pylint: disable=unused-argument"],
+    ["main.go", "x := y //nolint:errcheck"],
+    ["main.go", "x := y // nolint"],
+    ["lib/a.rb", "# rubocop:disable Style/StringLiterals"],
+    ["src/a.ts", "// oxlint-disable-next-line no-unused-vars"],
+  ])("flags a suppression in %s", (file, line) => {
+    expect(added(file, line)).toEqual(["silence-lint"]);
+  });
+
+  it("does not flag the word nolint inside an identifier", () => {
+    expect(added("main.go", "useNolintCache := true")).toEqual([]);
+  });
+});

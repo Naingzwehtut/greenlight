@@ -84771,7 +84771,10 @@ var RULES = [
   { id: "focus-test", added: /\b(?:it|test|describe)\.only\b|\bf(?:it|describe)\s*\(/ },
   { id: "remove-assertion", removed: /\bexpect\s*\(|\bassert\b|\.should\b|\bassert[A-Z]\w*\s*\(/, appliesTo: (_f, isTest) => isTest },
   { id: "silence-typecheck", added: /@ts-(?:ignore|nocheck|expect-error)|#\s*type:\s*ignore|#\s*pyright:\s*ignore/ },
-  { id: "silence-lint", added: /eslint-disable|#\s*noqa|#\s*ruff:\s*noqa|biome-ignore|prettier-ignore/ }
+  {
+    id: "silence-lint",
+    added: /eslint-disable|#\s*noqa|#\s*ruff:\s*noqa|biome-ignore|prettier-ignore|#\s*pylint:\s*disable|\/\/\s*nolint\b|#\s*rubocop:\s*disable|oxlint-disable/
+  }
   // Deleted test files are checked separately in findTampering.
 ];
 function parseUnifiedDiff(diff) {
