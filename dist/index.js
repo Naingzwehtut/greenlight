@@ -84472,10 +84472,16 @@ async function getFailedJobLogs(octokit, repo, runId) {
 }
 async function upsertComment(octokit, repo, issueNumber, body) {
   const comments = await octokit.paginate(octokit.rest.issues.listComments, { ...repo, issue_number: issueNumber, per_page: 100 });
-  const existing = comments.find((c) => c.body?.includes(COMMENT_MARKER));
+  const ours = comments.filter((c) => c.body?.trimStart().startsWith(COMMENT_MARKER));
+  const existing = ours.filter((c) => c.user?.type === "Bot").at(-1) ?? ours.at(-1);
   if (existing) {
-    const { data: data2 } = await octokit.rest.issues.updateComment({ ...repo, comment_id: existing.id, body });
-    return data2.html_url;
+    try {
+      const { data: data2 } = await octokit.rest.issues.updateComment({ ...repo, comment_id: existing.id, body });
+      return data2.html_url;
+    } catch (e) {
+      const status = e.status;
+      if (status !== 403 && status !== 404) throw e;
+    }
   }
   const { data } = await octokit.rest.issues.createComment({ ...repo, issue_number: issueNumber, body });
   return data.html_url;

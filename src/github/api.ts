@@ -64,10 +64,19 @@ export async function getFailedJobLogs(octokit: Octokit, repo: Repo, runId: numb
 /** Create or update greenlight's comment on a PR, so repeated runs do not spam it. */
 export async function upsertComment(octokit: Octokit, repo: Repo, issueNumber: number, body: string): Promise<string> {
   const comments = await octokit.paginate(octokit.rest.issues.listComments, { ...repo, issue_number: issueNumber, per_page: 100 });
-  const existing = comments.find((c) => c.body?.includes(COMMENT_MARKER));
+  // greenlight's reports start with the marker. Someone quoting a report has the marker
+  // somewhere in the middle, and editing their comment would fail with 403 anyway.
+  const ours = comments.filter((c) => c.body?.trimStart().startsWith(COMMENT_MARKER));
+  const existing = ours.filter((c) => c.user?.type === "Bot").at(-1) ?? ours.at(-1);
   if (existing) {
-    const { data } = await octokit.rest.issues.updateComment({ ...repo, comment_id: existing.id, body });
-    return data.html_url;
+    try {
+      const { data } = await octokit.rest.issues.updateComment({ ...repo, comment_id: existing.id, body });
+      return data.html_url;
+    } catch (e) {
+      // Not ours to edit (for example posted with a different token): post a fresh one.
+      const status = (e as { status?: number }).status;
+      if (status !== 403 && status !== 404) throw e;
+    }
   }
   const { data } = await octokit.rest.issues.createComment({ ...repo, issue_number: issueNumber, body });
   return data.html_url;
