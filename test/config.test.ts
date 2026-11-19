@@ -33,3 +33,31 @@ describe("loadConfig", () => {
     expect(() => loadConfig(dir)).toThrow(/mode/);
   });
 });
+
+describe("config file errors", () => {
+  const withConfig = (text: string) => {
+    const dir = mkdtempSync(join(tmpdir(), "greenlight-config-"));
+    writeFileSync(join(dir, ".greenlight.yml"), text);
+    return dir;
+  };
+
+  it("names the file when the YAML does not parse", () => {
+    expect(() => loadConfig(withConfig("mode: [pr\n"))).toThrow(/Could not parse \.greenlight\.yml/);
+  });
+
+  it("rejects a file that is a list instead of a mapping", () => {
+    expect(() => loadConfig(withConfig("- mode: pr\n"))).toThrow(/must be a mapping .* not a list/);
+  });
+
+  it("rejects a file that is a plain string", () => {
+    expect(() => loadConfig(withConfig("just some text\n"))).toThrow(/must be a mapping .* not a string/);
+  });
+
+  it("treats a comments-only file as defaults", () => {
+    expect(loadConfig(withConfig("# nothing yet\n")).mode).toBe("pr");
+  });
+
+  it("names the file in validation errors", () => {
+    expect(() => loadConfig(withConfig("mode: yolo\n"))).toThrow(/\(\.greenlight\.yml and inputs\)[\s\S]*mode/);
+  });
+});
