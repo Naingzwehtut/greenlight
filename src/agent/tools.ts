@@ -230,7 +230,8 @@ function search(ctx: ToolContext, pattern: string, glob?: string): ToolOutcome {
   const walk = (abs: string, rel: string) => {
     for (const entry of readdirSync(abs, { withFileTypes: true })) {
       if (hits.length >= 200) return;
-      if (SKIP_DIRS.has(entry.name)) continue;
+      // Symlinks are skipped: reading through one could expose a file outside the repository.
+      if (SKIP_DIRS.has(entry.name) || entry.isSymbolicLink()) continue;
       const r = rel ? `${rel}/${entry.name}` : entry.name;
       const a = join(abs, entry.name);
       if (entry.isDirectory()) {
