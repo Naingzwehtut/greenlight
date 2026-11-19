@@ -60856,7 +60856,7 @@ function search(ctx, pattern, glob2) {
   const walk3 = (abs, rel) => {
     for (const entry of readdirSync(abs, { withFileTypes: true })) {
       if (hits.length >= 200) return;
-      if (SKIP_DIRS.has(entry.name)) continue;
+      if (SKIP_DIRS.has(entry.name) || entry.isSymbolicLink()) continue;
       const r = rel ? `${rel}/${entry.name}` : entry.name;
       const a = join5(abs, entry.name);
       if (entry.isDirectory()) {
