@@ -3,7 +3,7 @@ import * as github from "@actions/github";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { detectPackageManager } from "./agent/commands.js";
-import { loadConfig, type Config } from "./config.js";
+import { loadConfig, parseNumberOption, type Config } from "./config.js";
 import {
   findPullRequestForBranch,
   getFailedJobLogs,
@@ -33,8 +33,7 @@ function input(name: string): string | undefined {
   return v === "" ? undefined : v;
 }
 function numberInput(name: string): number | undefined {
-  const v = input(name);
-  return v === undefined ? undefined : Number(v);
+  return parseNumberOption(`The ${name} input`, input(name));
 }
 
 async function main(): Promise<void> {

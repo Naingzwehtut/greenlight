@@ -59798,6 +59798,12 @@ function readConfigFile(path4, name) {
 function resolveModel(cfg) {
   return cfg.model ?? DEFAULT_MODELS[cfg.provider];
 }
+function parseNumberOption(name, value) {
+  if (value === void 0 || value.trim() === "") return void 0;
+  const n = Number(value.trim());
+  if (!Number.isFinite(n)) throw new Error(`${name} must be a number, got "${value}".`);
+  return n;
+}
 function dropUndefined(o) {
   return Object.fromEntries(Object.entries(o).filter(([, v]) => v !== void 0 && v !== ""));
 }
@@ -61154,7 +61160,7 @@ async function main(argv) {
     provider: values.provider,
     model: values.model,
     mode: values.mode,
-    maxIterations: values["max-iterations"] ? Number(values["max-iterations"]) : void 0
+    maxIterations: parseNumberOption("--max-iterations", values["max-iterations"])
   });
   if (command === "diagnose") {
     const logFile = file2 ?? values.log;

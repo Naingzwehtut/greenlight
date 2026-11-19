@@ -120,6 +120,17 @@ export function resolveModel(cfg: Config): string {
   return cfg.model ?? DEFAULT_MODELS[cfg.provider];
 }
 
+/**
+ * Parse a numeric option from the CLI or an Action input. `Number()` turns "abc" into NaN
+ * and "" into 0, which would surface later as a confusing schema error or a wrong value.
+ */
+export function parseNumberOption(name: string, value: string | undefined): number | undefined {
+  if (value === undefined || value.trim() === "") return undefined;
+  const n = Number(value.trim());
+  if (!Number.isFinite(n)) throw new Error(`${name} must be a number, got "${value}".`);
+  return n;
+}
+
 function dropUndefined(o: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && v !== ""));
 }

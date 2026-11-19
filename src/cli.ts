@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { buildCommandSet } from "./agent/commands.js";
 import { classify } from "./classify/index.js";
-import { loadConfig } from "./config.js";
+import { loadConfig, parseNumberOption } from "./config.js";
 import { parseLog } from "./logs/index.js";
 import { createProvider } from "./providers/index.js";
 import { renderReport } from "./report/render.js";
@@ -55,7 +55,7 @@ async function main(argv: string[]): Promise<number> {
     provider: values.provider,
     model: values.model,
     mode: values.mode,
-    maxIterations: values["max-iterations"] ? Number(values["max-iterations"]) : undefined,
+    maxIterations: parseNumberOption("--max-iterations", values["max-iterations"]),
   });
 
   if (command === "diagnose") {
