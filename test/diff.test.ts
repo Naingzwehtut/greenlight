@@ -35,3 +35,21 @@ describe("parseUnifiedDiff", () => {
     ]);
   });
 });
+
+describe("skip-test rule", () => {
+  const added = (line: string) =>
+    findTampering(`diff --git a/a.test.ts b/a.test.ts\n--- a/a.test.ts\n+++ b/a.test.ts\n@@ -1 +1 @@\n+${line}`, () => true).map((v) => v.rule);
+
+  it.each([
+    'it.skipIf(process.env.CI)("adds", () => {',
+    'describe.skipIf(true)("math", () => {',
+    "    this.skip();",
+    'it.skip("adds", () => {',
+  ])("flags %j", (line) => {
+    expect(added(line)).toContain("skip-test");
+  });
+
+  it("does not flag ordinary code", () => {
+    expect(added("const skipped = items.filter(skipIfEmpty);")).toEqual([]);
+  });
+});

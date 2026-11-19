@@ -18,7 +18,7 @@ interface Rule {
 }
 
 const RULES: Rule[] = [
-  { id: "skip-test", added: /\b(?:it|test|describe)\.(?:skip|todo)\b|\bx(?:it|describe|test)\s*\(|@pytest\.mark\.(?:skip|xfail)|pytest\.skip\(|@unittest\.skip/ },
+  { id: "skip-test", added: /\b(?:it|test|describe)\.(?:skip|todo|skipIf)\b|\bthis\.skip\s*\(|\bx(?:it|describe|test)\s*\(|@pytest\.mark\.(?:skip|xfail)|pytest\.skip\(|@unittest\.skip/ },
   { id: "focus-test", added: /\b(?:it|test|describe)\.only\b|\bf(?:it|describe)\s*\(/ },
   { id: "remove-assertion", removed: /\bexpect\s*\(|\bassert\b|\.should\b|\bassert[A-Z]\w*\s*\(/, appliesTo: (_f, isTest) => isTest },
   { id: "silence-typecheck", added: /@ts-(?:ignore|nocheck|expect-error)|#\s*type:\s*ignore|#\s*pyright:\s*ignore/ },
