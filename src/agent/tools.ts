@@ -186,8 +186,13 @@ function readFile(ctx: ToolContext, p: string, start?: number, end?: number): To
   if (!existsSync(abs)) return err(`"${rel}" does not exist.`);
   if (statSync(abs).isDirectory()) return err(`"${rel}" is a directory; use list_files.`);
   if (statSync(abs).size > MAX_FILE_BYTES) return err(`"${rel}" is too large to read.`);
-  const lines = readFileSync(abs, "utf8").split("\n");
+  const text = readFileSync(abs, "utf8");
+  if (text === "") return { content: `${rel} is empty.` };
+  // A final newline ends the last line; it does not start a new one.
+  const lines = text.replace(/\r?\n$/, "").split("\n");
   const from = Math.max(1, start ?? 1);
+  if (from > lines.length) return err(`"${rel}" has ${lines.length} lines; start_line ${from} is past the end.`);
+  if (end !== undefined && end < from) return err(`end_line (${end}) is before start_line (${from}).`);
   const to = Math.min(lines.length, end ?? from + MAX_READ_LINES - 1, from + MAX_READ_LINES - 1);
   const body = lines
     .slice(from - 1, to)
