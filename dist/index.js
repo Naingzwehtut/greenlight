@@ -84436,6 +84436,13 @@ async function findPullRequestForBranch(octokit, repo, branch) {
 // src/util/exec.ts
 import { spawn } from "node:child_process";
 var MAX_OUTPUT = 2e6;
+function appendCapped(output2, chunk, max = MAX_OUTPUT) {
+  const next = output2 + chunk;
+  if (next.length <= max) return next;
+  const cut = next.slice(next.length - max);
+  const firstNl = cut.indexOf("\n");
+  return "(earlier output dropped) \u2026\n" + (firstNl >= 0 ? cut.slice(firstNl + 1) : cut);
+}
 function runCommand(command, opts) {
   const started = Date.now();
   return new Promise((resolve3) => {
@@ -84447,7 +84454,7 @@ function runCommand(command, opts) {
     });
     let output2 = "";
     const onData = (chunk) => {
-      if (output2.length < MAX_OUTPUT) output2 += chunk.toString("utf8");
+      output2 = appendCapped(output2, chunk.toString("utf8"));
     };
     child.stdout.on("data", onData);
     child.stderr.on("data", onData);
