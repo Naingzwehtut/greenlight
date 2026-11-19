@@ -60345,8 +60345,9 @@ function renderReport(input2) {
     lines.push("", "</details>", "");
   }
   if (attempt?.diff && attempt.status !== "rejected") {
-    const diff = attempt.diff.length > 15e3 ? attempt.diff.slice(0, 15e3) + "\n\u2026 (diff truncated)" : attempt.diff;
-    lines.push("<details><summary>Diff</summary>", "", "```diff", diff.trimEnd(), "```", "", "</details>", "");
+    const diff = truncate(attempt.diff.trimEnd(), MAX_DIFF_CHARS);
+    const fence = fenceFor(diff);
+    lines.push("<details><summary>Diff</summary>", "", `${fence}diff`, diff, fence, "", "</details>", "");
   }
   if (attempt) {
     const tokens = attempt.usage.inputTokens + attempt.usage.outputTokens;
@@ -60362,6 +60363,11 @@ function confidenceBar(c) {
   const pct = Math.round(c * 100);
   const filled = Math.round(c * 10);
   return `${"\u2588".repeat(filled)}${"\u2591".repeat(10 - filled)} ${pct}%`;
+}
+var MAX_DIFF_CHARS = 15e3;
+function fenceFor(text) {
+  const longest = Math.max(0, ...(text.match(/`{3,}/g) ?? []).map((m) => m.length));
+  return "`".repeat(Math.max(3, longest + 1));
 }
 function codeCell(s) {
   const text = s.replace(/\r?\n/g, " ").replace(/\|/g, "\\|");
