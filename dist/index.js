@@ -84303,6 +84303,39 @@ function dropUndefined(o) {
   return Object.fromEntries(Object.entries(o).filter(([, v]) => v !== void 0 && v !== ""));
 }
 
+// src/logs/clean.ts
+var ANSI = /\x1b\[[0-9;?]*[ -/]*[@-~]/g;
+var TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z ?/;
+var GROUP_MARKERS = /^##\[(?:group|endgroup|section)\].*$/;
+function cleanLog(raw) {
+  return raw.replace(/\r\n?/g, "\n").split("\n").map((line) => line.replace(ANSI, "").replace(TIMESTAMP, "")).filter((line) => !GROUP_MARKERS.test(line)).join("\n");
+}
+function normalizePath(p, workspace) {
+  let out = p.trim().replace(/\\/g, "/");
+  const roots = [workspace, "/home/runner/work/", "/github/workspace/"].filter(Boolean);
+  for (const root of roots) {
+    const r = root.replace(/\\/g, "/").replace(/\/?$/, "/");
+    if (out.startsWith(r)) {
+      out = out.slice(r.length);
+      if (root === "/home/runner/work/") out = out.split("/").slice(2).join("/");
+      break;
+    }
+  }
+  return out.replace(/^\.\//, "");
+}
+function truncate(text, max) {
+  if (text.length <= max) return text;
+  const cut = text.slice(0, max);
+  const lastNl = cut.lastIndexOf("\n");
+  return (lastNl > max * 0.5 ? cut.slice(0, lastNl) : cut) + "\n\u2026 (truncated)";
+}
+function tail(text, max) {
+  if (text.length <= max) return text;
+  const cut = text.slice(text.length - max);
+  const firstNl = cut.indexOf("\n");
+  return "(earlier output truncated) \u2026\n" + (firstNl >= 0 ? cut.slice(firstNl + 1) : cut);
+}
+
 // src/report/render.ts
 var COMMENT_MARKER = "<!-- greenlight:report -->";
 var STATUS_LINE = {
@@ -84347,8 +84380,9 @@ function renderReport(input3) {
     lines.push("", "</details>", "");
   }
   if (attempt?.diff && attempt.status !== "rejected") {
-    const diff = attempt.diff.length > 15e3 ? attempt.diff.slice(0, 15e3) + "\n\u2026 (diff truncated)" : attempt.diff;
-    lines.push("<details><summary>Diff</summary>", "", "```diff", diff.trimEnd(), "```", "", "</details>", "");
+    const diff = truncate(attempt.diff.trimEnd(), MAX_DIFF_CHARS);
+    const fence = fenceFor(diff);
+    lines.push("<details><summary>Diff</summary>", "", `${fence}diff`, diff, fence, "", "</details>", "");
   }
   if (attempt) {
     const tokens = attempt.usage.inputTokens + attempt.usage.outputTokens;
@@ -84364,6 +84398,11 @@ function confidenceBar(c) {
   const pct = Math.round(c * 100);
   const filled = Math.round(c * 10);
   return `${"\u2588".repeat(filled)}${"\u2591".repeat(10 - filled)} ${pct}%`;
+}
+var MAX_DIFF_CHARS = 15e3;
+function fenceFor(text) {
+  const longest = Math.max(0, ...(text.match(/`{3,}/g) ?? []).map((m) => m.length));
+  return "`".repeat(Math.max(3, longest + 1));
 }
 function codeCell(s) {
   const text = s.replace(/\r?\n/g, " ").replace(/\|/g, "\\|");
@@ -84849,39 +84888,6 @@ var silentLogger = {
   debug: () => {
   }
 };
-
-// src/logs/clean.ts
-var ANSI = /\x1b\[[0-9;?]*[ -/]*[@-~]/g;
-var TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z ?/;
-var GROUP_MARKERS = /^##\[(?:group|endgroup|section)\].*$/;
-function cleanLog(raw) {
-  return raw.replace(/\r\n?/g, "\n").split("\n").map((line) => line.replace(ANSI, "").replace(TIMESTAMP, "")).filter((line) => !GROUP_MARKERS.test(line)).join("\n");
-}
-function normalizePath(p, workspace) {
-  let out = p.trim().replace(/\\/g, "/");
-  const roots = [workspace, "/home/runner/work/", "/github/workspace/"].filter(Boolean);
-  for (const root of roots) {
-    const r = root.replace(/\\/g, "/").replace(/\/?$/, "/");
-    if (out.startsWith(r)) {
-      out = out.slice(r.length);
-      if (root === "/home/runner/work/") out = out.split("/").slice(2).join("/");
-      break;
-    }
-  }
-  return out.replace(/^\.\//, "");
-}
-function truncate(text, max) {
-  if (text.length <= max) return text;
-  const cut = text.slice(0, max);
-  const lastNl = cut.lastIndexOf("\n");
-  return (lastNl > max * 0.5 ? cut.slice(0, lastNl) : cut) + "\n\u2026 (truncated)";
-}
-function tail(text, max) {
-  if (text.length <= max) return text;
-  const cut = text.slice(text.length - max);
-  const firstNl = cut.indexOf("\n");
-  return "(earlier output truncated) \u2026\n" + (firstNl >= 0 ? cut.slice(firstNl + 1) : cut);
-}
 
 // src/logs/parsers/eslint.ts
 var FILE_HEADER = /^(?:\/|[A-Za-z]:[\\/]|\.{0,2}\/?[\w@.-]+\/)\S*\.(?:[cm]?[jt]sx?|vue|svelte|astro)$/;

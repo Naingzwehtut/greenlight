@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { AttemptResult } from "../src/agent/loop.js";
 import type { Diagnosis } from "../src/classify/index.js";
-import { codeCell, COMMENT_MARKER, confidenceBar, renderReport } from "../src/report/render.js";
+import { codeCell, COMMENT_MARKER, fenceFor, confidenceBar, renderReport } from "../src/report/render.js";
 
 const diagnosis: Diagnosis = {
   category: "test",
@@ -73,5 +73,28 @@ describe("codeCell", () => {
     });
     const row = md.split("\n").find((l) => l.includes("npm test"))!;
     expect(row.split(/(?<!\\)\|/).length).toBe(4);
+  });
+});
+
+describe("diff block", () => {
+  it("uses a fence longer than any backticks in the diff", () => {
+    expect(fenceFor("+a\n-b")).toBe("```");
+    expect(fenceFor(" ```ts\n+x\n ```")).toBe("````");
+  });
+
+  it("keeps a Markdown diff inside one code block", () => {
+    const diff = "diff --git a/README.md b/README.md\n ```bash\n-npm i\n+npm ci\n ```\n";
+    const md = renderReport({ diagnosis, attempt: { ...attempt, diff } });
+    expect(md).toContain("````diff\n");
+    expect(md).toContain(" ```\n````");
+  });
+
+  it("truncates a long diff at a line boundary", () => {
+    const diff = Array.from({ length: 2000 }, (_, i) => `+line number ${i}`).join("\n");
+    const md = renderReport({ diagnosis, attempt: { ...attempt, diff } });
+    const block = md.slice(md.indexOf("```diff"), md.lastIndexOf("```"));
+    const lines = block.split("\n").slice(1, -1);
+    expect(lines.at(-1)).toBe("… (truncated)");
+    expect(lines.at(-2)).toMatch(/^\+line number \d+$/);
   });
 });

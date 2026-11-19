@@ -1,5 +1,6 @@
 import type { AttemptResult } from "../agent/loop.js";
 import type { Diagnosis } from "../classify/index.js";
+import { truncate } from "../logs/clean.js";
 
 export const COMMENT_MARKER = "<!-- greenlight:report -->";
 
@@ -63,8 +64,9 @@ export function renderReport(input: RenderInput): string {
   }
 
   if (attempt?.diff && attempt.status !== "rejected") {
-    const diff = attempt.diff.length > 15000 ? attempt.diff.slice(0, 15000) + "\n… (diff truncated)" : attempt.diff;
-    lines.push("<details><summary>Diff</summary>", "", "```diff", diff.trimEnd(), "```", "", "</details>", "");
+    const diff = truncate(attempt.diff.trimEnd(), MAX_DIFF_CHARS);
+    const fence = fenceFor(diff);
+    lines.push("<details><summary>Diff</summary>", "", `${fence}diff`, diff, fence, "", "</details>", "");
   }
 
   if (attempt) {
@@ -82,6 +84,17 @@ export function confidenceBar(c: number): string {
   const pct = Math.round(c * 100);
   const filled = Math.round(c * 10);
   return `${"█".repeat(filled)}${"░".repeat(10 - filled)} ${pct}%`;
+}
+
+const MAX_DIFF_CHARS = 15_000;
+
+/**
+ * A code fence longer than any backtick run in the text. A diff of a Markdown file has
+ * context lines like " ```", which would otherwise close a three-backtick fence early.
+ */
+export function fenceFor(text: string): string {
+  const longest = Math.max(0, ...(text.match(/`{3,}/g) ?? []).map((m) => m.length));
+  return "`".repeat(Math.max(3, longest + 1));
 }
 
 /**
