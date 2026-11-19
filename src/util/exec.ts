@@ -9,7 +9,17 @@ export interface CommandResult {
   durationMs: number;
 }
 
-const MAX_OUTPUT = 2_000_000;
+/** Most characters of output kept. Failures are printed last, so the end is what we keep. */
+export const MAX_OUTPUT = 2_000_000;
+
+/** Append a chunk, dropping the oldest output once the total passes `max`. */
+export function appendCapped(output: string, chunk: string, max = MAX_OUTPUT): string {
+  const next = output + chunk;
+  if (next.length <= max) return next;
+  const cut = next.slice(next.length - max);
+  const firstNl = cut.indexOf("\n");
+  return "(earlier output dropped) …\n" + (firstNl >= 0 ? cut.slice(firstNl + 1) : cut);
+}
 
 /** Run a shell command and capture everything it prints. Never throws on a non-zero exit. */
 export function runCommand(
@@ -26,7 +36,7 @@ export function runCommand(
     });
     let output = "";
     const onData = (chunk: Buffer) => {
-      if (output.length < MAX_OUTPUT) output += chunk.toString("utf8");
+      output = appendCapped(output, chunk.toString("utf8"));
     };
     child.stdout.on("data", onData);
     child.stderr.on("data", onData);
