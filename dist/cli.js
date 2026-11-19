@@ -39851,6 +39851,67 @@ import { readFileSync as readFileSync4 } from "node:fs";
 import { resolve as resolve3 } from "node:path";
 import { parseArgs } from "node:util";
 
+// package.json
+var package_default = {
+  name: "greenlight-ci",
+  version: "0.1.0",
+  description: "An AI agent that turns red CI green: it reads failing CI logs, reproduces the failure, fixes the code and opens a pull request.",
+  type: "module",
+  license: "MIT",
+  author: "Naingzwehtut",
+  repository: {
+    type: "git",
+    url: "git+https://github.com/Naingzwehtut/greenlight.git"
+  },
+  bugs: "https://github.com/Naingzwehtut/greenlight/issues",
+  homepage: "https://github.com/Naingzwehtut/greenlight#readme",
+  keywords: [
+    "ci",
+    "github-actions",
+    "ai-agent",
+    "llm",
+    "claude",
+    "automation",
+    "devtools",
+    "testing"
+  ],
+  engines: {
+    node: ">=22"
+  },
+  bin: {
+    greenlight: "dist/cli.js"
+  },
+  files: [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  scripts: {
+    build: "node scripts/build.mjs",
+    typecheck: "tsc --noEmit",
+    test: "vitest run",
+    "test:watch": "vitest",
+    bench: "tsx bench/run.ts",
+    check: "npm run typecheck && npm test"
+  },
+  dependencies: {
+    "@actions/core": "^3.0.1",
+    "@actions/github": "^9.1.1",
+    "@anthropic-ai/sdk": "^1.8.0",
+    picomatch: "^4.0.7",
+    yaml: "^2.9.1",
+    zod: "^4.6.7"
+  },
+  devDependencies: {
+    "@types/node": "^26.6.6",
+    "@types/picomatch": "^4.0.3",
+    esbuild: "^0.28.2",
+    tsx: "^4.23.15",
+    typescript: "^7.0.2",
+    vitest: "^5.1.0"
+  }
+};
+
 // src/agent/commands.ts
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -61132,6 +61193,7 @@ Options:
   --mode <mode>       pr | push | comment (the CLI never pushes; "comment" means diagnose only)
   --max-iterations n  Maximum model turns
   --json              Print the result as JSON
+  -v, --version       Print the version
   -h, --help          Show this help
 `;
 async function main(argv) {
@@ -61147,9 +61209,14 @@ async function main(argv) {
       mode: { type: "string" },
       "max-iterations": { type: "string" },
       json: { type: "boolean", default: false },
-      help: { type: "boolean", short: "h", default: false }
+      help: { type: "boolean", short: "h", default: false },
+      version: { type: "boolean", short: "v", default: false }
     }
   });
+  if (values.version) {
+    console.log(package_default.version);
+    return 0;
+  }
   const [command, file2] = positionals;
   if (values.help || !command) {
     console.log(HELP);

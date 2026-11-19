@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
+// Bundled into dist/cli.js at build time, so the version always matches the release.
+import pkg from "../package.json" with { type: "json" };
 import { buildCommandSet } from "./agent/commands.js";
 import { classify } from "./classify/index.js";
 import { loadConfig, parseNumberOption } from "./config.js";
@@ -25,6 +27,7 @@ Options:
   --mode <mode>       pr | push | comment (the CLI never pushes; "comment" means diagnose only)
   --max-iterations n  Maximum model turns
   --json              Print the result as JSON
+  -v, --version       Print the version
   -h, --help          Show this help
 `;
 
@@ -42,8 +45,13 @@ async function main(argv: string[]): Promise<number> {
       "max-iterations": { type: "string" },
       json: { type: "boolean", default: false },
       help: { type: "boolean", short: "h", default: false },
+      version: { type: "boolean", short: "v", default: false },
     },
   });
+  if (values.version) {
+    console.log(pkg.version);
+    return 0;
+  }
   const [command, file] = positionals;
   if (values.help || !command) {
     console.log(HELP);
