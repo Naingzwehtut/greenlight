@@ -2,7 +2,7 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { loadConfig, resolveModel } from "../src/config.js";
+import { loadConfig, parseNumberOption, resolveModel } from "../src/config.js";
 
 const tmp = () => mkdtempSync(join(tmpdir(), "greenlight-config-"));
 
@@ -59,5 +59,18 @@ describe("config file errors", () => {
 
   it("names the file in validation errors", () => {
     expect(() => loadConfig(withConfig("mode: yolo\n"))).toThrow(/\(\.greenlight\.yml and inputs\)[\s\S]*mode/);
+  });
+});
+
+describe("parseNumberOption", () => {
+  it("parses numbers and ignores empty values", () => {
+    expect(parseNumberOption("--max-iterations", "15")).toBe(15);
+    expect(parseNumberOption("--max-iterations", " 0.7 ")).toBe(0.7);
+    expect(parseNumberOption("--max-iterations", undefined)).toBeUndefined();
+    expect(parseNumberOption("--max-iterations", "")).toBeUndefined();
+  });
+
+  it("names the option when the value is not a number", () => {
+    expect(() => parseNumberOption("--max-iterations", "ten")).toThrow('--max-iterations must be a number, got "ten".');
   });
 });

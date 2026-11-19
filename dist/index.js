@@ -84314,6 +84314,12 @@ function readConfigFile(path4, name) {
 function resolveModel(cfg) {
   return cfg.model ?? DEFAULT_MODELS[cfg.provider];
 }
+function parseNumberOption(name, value) {
+  if (value === void 0 || value.trim() === "") return void 0;
+  const n = Number(value.trim());
+  if (!Number.isFinite(n)) throw new Error(`${name} must be a number, got "${value}".`);
+  return n;
+}
 function dropUndefined(o) {
   return Object.fromEntries(Object.entries(o).filter(([, v]) => v !== void 0 && v !== ""));
 }
@@ -85756,8 +85762,7 @@ function input2(name) {
   return v === "" ? void 0 : v;
 }
 function numberInput(name) {
-  const v = input2(name);
-  return v === void 0 ? void 0 : Number(v);
+  return parseNumberOption(`The ${name} input`, input2(name));
 }
 async function main() {
   const root = process.env.GITHUB_WORKSPACE ?? process.cwd();
