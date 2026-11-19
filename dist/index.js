@@ -31262,10 +31262,10 @@ function startToolRunnerSpan(client, params, conversationId) {
     }
   });
 }
-async function withToolUseSpan(client, tool, toolUse, options, run) {
+async function withToolUseSpan(client, tool, toolUse, options, run2) {
   const tracer = client._tracer;
   if (!tracer)
-    return run();
+    return run2();
   const { signal, conversationId, sessionID, parentContext = context3.active() } = options;
   const description = "description" in tool ? tool.description : void 0;
   const attributes = {
@@ -31285,10 +31285,10 @@ async function withToolUseSpan(client, tool, toolUse, options, run) {
   const operation = toolUse.type === "agent.tool_use" ? "anthropic.tool_use" : wasCreatedByStainlessHelper(tool) && tool[SDK_HELPER_SYMBOL] === "mcpTool" ? "anthropic.mcp_tool_use" : "anthropic.custom_tool_use";
   const span = guardTracing(client, () => tracer.startSpan(`${operation} ${toolUse.name}`, { kind: SpanKind.INTERNAL, attributes }, parentContext));
   if (!span)
-    return run();
+    return run2();
   let result;
   try {
-    result = await context3.with(trace.setSpan(parentContext, span), run);
+    result = await context3.with(trace.setSpan(parentContext, span), run2);
     return result;
   } finally {
     const succeeded = result !== void 0 && !result.isError;
@@ -34963,7 +34963,7 @@ var init_utils3 = __esm({
 
 // node_modules/@anthropic-ai/sdk/helpers/beta/json-schema.mjs
 function betaTool(options) {
-  const { name, inputSchema, description, run, ...extraProps } = options;
+  const { name, inputSchema, description, run: run2, ...extraProps } = options;
   if (inputSchema.type !== "object") {
     throw new Error(`JSON schema for tool "${name}" must be an object, but got ${inputSchema.type}`);
   }
@@ -34973,7 +34973,7 @@ function betaTool(options) {
     name,
     input_schema: inputSchema,
     description,
-    run,
+    run: run2,
     parse: (content) => content
   };
 }
@@ -49565,15 +49565,15 @@ async function generateToolResponse(params, runnable, available, lastMessage, re
       const sequence = sequences.get(family) ?? { tail: Promise.resolve(), failed: false };
       sequences.set(family, sequence);
       const registered = params.tools.some((t) => isRunnableToolset(t) && toolsetFamily(t) === family);
-      const run = started ?? sequence.tail.then(() => sequence.failed ? toolsetResultBlock(toolUse, notExecutedText(family), true) : runToolsetCall(params, family, toolUse, requestOptions, client, toolOtelContext));
-      sequence.tail = run.then(({ is_error }) => {
+      const run2 = started ?? sequence.tail.then(() => sequence.failed ? toolsetResultBlock(toolUse, notExecutedText(family), true) : runToolsetCall(params, family, toolUse, requestOptions, client, toolOtelContext));
+      sequence.tail = run2.then(({ is_error }) => {
         if (is_error && registered)
           sequence.failed = true;
       }, () => {
         sequence.failed = true;
       });
-      calls?.set(toolUse.id, { status: "started", result: run });
-      return run;
+      calls?.set(toolUse.id, { status: "started", result: run2 });
+      return run2;
     }
     if (started) {
       return started;
@@ -83997,7 +83997,7 @@ function visit(schema, fnOrHandlers) {
     return h ? h(node2, rewritten) : node2;
   };
   const cache = /* @__PURE__ */ new Map();
-  function run(s) {
+  function run2(s) {
     const cached2 = cache.get(s);
     if (cached2 === RESOLVING) {
       return new $ZodLazy({
@@ -84023,21 +84023,21 @@ function visit(schema, fnOrHandlers) {
         let changed = false;
         const newShape = {};
         for (const k of keys) {
-          const mapped = run(oldShape[k]);
+          const mapped = run2(oldShape[k]);
           if (mapped !== oldShape[k])
             changed = true;
           newShape[k] = mapped;
         }
         let newCatchall = def.catchall;
         if (def.catchall) {
-          newCatchall = run(def.catchall);
+          newCatchall = run2(def.catchall);
           if (newCatchall !== def.catchall)
             changed = true;
         }
         return changed ? clone(s, { ...def, shape: newShape, catchall: newCatchall }) : s;
       }
       case "array": {
-        const mapped = run(def.element);
+        const mapped = run2(def.element);
         return mapped === def.element ? s : clone(s, { ...def, element: mapped });
       }
       case "tuple": {
@@ -84045,14 +84045,14 @@ function visit(schema, fnOrHandlers) {
         let changed = false;
         const newItems = [];
         for (const item of oldItems) {
-          const mapped = run(item);
+          const mapped = run2(item);
           if (mapped !== item)
             changed = true;
           newItems.push(mapped);
         }
         let newRest = def.rest;
         if (def.rest) {
-          newRest = run(def.rest);
+          newRest = run2(def.rest);
           if (newRest !== def.rest)
             changed = true;
         }
@@ -84060,12 +84060,12 @@ function visit(schema, fnOrHandlers) {
       }
       case "record":
       case "map": {
-        const newKey = run(def.keyType);
-        const newVal = run(def.valueType);
+        const newKey = run2(def.keyType);
+        const newVal = run2(def.valueType);
         return newKey === def.keyType && newVal === def.valueType ? s : clone(s, { ...def, keyType: newKey, valueType: newVal });
       }
       case "set": {
-        const newVal = run(def.valueType);
+        const newVal = run2(def.valueType);
         return newVal === def.valueType ? s : clone(s, { ...def, valueType: newVal });
       }
       case "union": {
@@ -84073,7 +84073,7 @@ function visit(schema, fnOrHandlers) {
         let changed = false;
         const newOptions = [];
         for (const opt of oldOptions) {
-          const mapped = run(opt);
+          const mapped = run2(opt);
           if (mapped !== opt)
             changed = true;
           newOptions.push(mapped);
@@ -84081,8 +84081,8 @@ function visit(schema, fnOrHandlers) {
         return changed ? clone(s, { ...def, options: newOptions }) : s;
       }
       case "intersection": {
-        const newLeft = run(def.left);
-        const newRight = run(def.right);
+        const newLeft = run2(def.left);
+        const newRight = run2(def.right);
         return newLeft === def.left && newRight === def.right ? s : clone(s, { ...def, left: newLeft, right: newRight });
       }
       case "optional":
@@ -84094,23 +84094,23 @@ function visit(schema, fnOrHandlers) {
       case "nonoptional":
       case "promise":
       case "success": {
-        const newInner = run(def.innerType);
+        const newInner = run2(def.innerType);
         return newInner === def.innerType ? s : clone(s, { ...def, innerType: newInner });
       }
       case "pipe": {
-        const newIn = run(def.in);
-        const newOut = run(def.out);
+        const newIn = run2(def.in);
+        const newOut = run2(def.out);
         return newIn === def.in && newOut === def.out ? s : clone(s, { ...def, in: newIn, out: newOut });
       }
       case "function": {
-        const newInput = run(def.input);
-        const newOutput = run(def.output);
+        const newInput = run2(def.input);
+        const newOutput = run2(def.output);
         return newInput === def.input && newOutput === def.output ? s : clone(s, { ...def, input: newInput, output: newOutput });
       }
       case "lazy": {
         const original = def.getter;
         const { _cachedInner, ...rest } = def;
-        return clone(s, { ...rest, getter: () => run(original()) });
+        return clone(s, { ...rest, getter: () => run2(original()) });
       }
       // A leaf by choice: `parts` are regex fragments, not data positions.
       case "template_literal":
@@ -84141,7 +84141,7 @@ function visit(schema, fnOrHandlers) {
       }
     }
   }
-  return run(schema);
+  return run2(schema);
 }
 
 // node_modules/zod/v4/classic/deep-partial.js
@@ -84444,11 +84444,18 @@ function appendCapped(output2, chunk, max = MAX_OUTPUT) {
   return "(earlier output dropped) \u2026\n" + (firstNl >= 0 ? cut.slice(firstNl + 1) : cut);
 }
 function runCommand(command, opts) {
+  return run(command, [], true, command, opts);
+}
+function runProgram(file2, args, opts) {
+  return run(file2, args, false, [file2, ...args].join(" "), opts);
+}
+function run(file2, args, shell, label, opts) {
+  const command = label;
   const started = Date.now();
   return new Promise((resolve3) => {
-    const child = spawn(command, {
+    const child = spawn(file2, args, {
       cwd: opts.cwd,
-      shell: true,
+      shell,
       env: { ...process.env, CI: "true", FORCE_COLOR: "0", NO_COLOR: "1", ...opts.env },
       stdio: ["ignore", "pipe", "pipe"]
     });
@@ -84487,20 +84494,17 @@ ${err2.message}`;
 var BOT_NAME = "greenlight[bot]";
 var BOT_EMAIL = "greenlight-bot@users.noreply.github.com";
 async function git(root, args) {
-  const r = await runCommand(`git ${args}`, { cwd: root, timeoutSec: 120 });
-  if (r.exitCode !== 0) throw new Error(`git ${args.split(" ")[0]} failed:
+  const r = await runProgram("git", args, { cwd: root, timeoutSec: 120 });
+  if (r.exitCode !== 0) throw new Error(`git ${args[0]} failed:
 ${r.output}`);
   return r.output.trim();
 }
 async function commitAndPush(root, opts) {
-  if (opts.createBranch) await git(root, `checkout -B "${opts.branch}"`);
-  await git(root, `add -- ${opts.files.map((f) => `"${f}"`).join(" ")}`);
-  await git(
-    root,
-    `-c user.name="${BOT_NAME}" -c user.email="${BOT_EMAIL}" commit -m "${opts.message.replace(/"/g, '\\"')}"`
-  );
-  await git(root, `push ${opts.createBranch ? "--force-with-lease " : ""}origin "HEAD:refs/heads/${opts.branch}"`);
-  return git(root, "rev-parse HEAD");
+  if (opts.createBranch) await git(root, ["checkout", "-B", opts.branch]);
+  await git(root, ["add", "--", ...opts.files]);
+  await git(root, ["-c", `user.name=${BOT_NAME}`, "-c", `user.email=${BOT_EMAIL}`, "commit", "-m", opts.message]);
+  await git(root, ["push", ...opts.createBranch ? ["--force-with-lease"] : [], "origin", `HEAD:refs/heads/${opts.branch}`]);
+  return git(root, ["rev-parse", "HEAD"]);
 }
 
 // src/providers/anthropic.ts
@@ -85740,42 +85744,42 @@ async function main() {
     info(`The run concluded with "${conclusion}", nothing to fix.`);
     return;
   }
-  const run = await getRun(octokit, repo, runId);
-  info(`Inspecting ${run.workflowName} run ${run.id} on ${run.headBranch} (${run.headSha.slice(0, 7)})`);
-  if (run.headBranch.startsWith(config2.branchPrefix)) {
-    info(`Skipping: ${run.headBranch} is a greenlight branch.`);
+  const run2 = await getRun(octokit, repo, runId);
+  info(`Inspecting ${run2.workflowName} run ${run2.id} on ${run2.headBranch} (${run2.headSha.slice(0, 7)})`);
+  if (run2.headBranch.startsWith(config2.branchPrefix)) {
+    info(`Skipping: ${run2.headBranch} is a greenlight branch.`);
     return;
   }
-  const isFork = run.headRepoFullName.toLowerCase() !== `${repo.owner}/${repo.repo}`.toLowerCase();
+  const isFork = run2.headRepoFullName.toLowerCase() !== `${repo.owner}/${repo.repo}`.toLowerCase();
   const effective = isFork ? { ...config2, mode: "comment" } : config2;
   if (isFork) info("The run comes from a fork, so greenlight will only comment.");
-  await checkoutSha(root, run.headSha);
+  await checkoutSha(root, run2.headSha);
   if (effective.mode !== "comment") await installDependencies(root, effective);
-  const jobs = await getFailedJobLogs(octokit, repo, run.id);
+  const jobs = await getFailedJobLogs(octokit, repo, run2.id);
   if (!jobs.length) {
     info("No failed jobs found in this run.");
     return;
   }
   const log = jobs.map((j) => `### Job: ${j.name}${j.failedSteps.length ? ` (failed step: ${j.failedSteps.join(", ")})` : ""}
 ${j.log}`).join("\n\n");
-  const prNumbers = run.pullRequests.length ? run.pullRequests : [await findPullRequestForBranch(octokit, repo, run.headBranch)].filter((n) => !!n);
+  const prNumbers = run2.pullRequests.length ? run2.pullRequests : [await findPullRequestForBranch(octokit, repo, run2.headBranch)].filter((n) => !!n);
   const result = await runGreenlight({
     root,
     log,
     config: effective,
     provider: () => createProvider(effective),
     logger,
-    context: `Workflow "${run.workflowName}" failed on branch "${run.headBranch}"${prNumbers.length ? ` (pull request #${prNumbers[0]})` : ""}. Failed jobs: ${jobs.map((j) => j.name).join(", ")}.`
+    context: `Workflow "${run2.workflowName}" failed on branch "${run2.headBranch}"${prNumbers.length ? ` (pull request #${prNumbers[0]})` : ""}. Failed jobs: ${jobs.map((j) => j.name).join(", ")}.`
   });
   let prUrl;
   const attempt = result.attempt;
   if (attempt && shouldPublish(attempt, effective)) {
-    const body = renderReport({ ...result, runUrl: run.url });
-    prUrl = await publish(octokit, repo, root, run, effective, attempt.changedFiles, body, attempt.report.summary);
+    const body = renderReport({ ...result, runUrl: run2.url });
+    prUrl = await publish(octokit, repo, root, run2, effective, attempt.changedFiles, body, attempt.report.summary);
   } else if (attempt?.changedFiles.length) {
     info("The attempt did not meet the bar for publishing (status, checks or confidence); posting a report only.");
   }
-  const report = renderReport({ ...result, runUrl: run.url, prUrl });
+  const report = renderReport({ ...result, runUrl: run2.url, prUrl });
   for (const n of prNumbers) {
     const url2 = await upsertComment(octokit, repo, n, report);
     info(`Commented: ${url2}`);
@@ -85786,19 +85790,19 @@ ${j.log}`).join("\n\n");
   setOutput("confidence", String(result.attempt?.report.confidence ?? 0));
   setOutput("pr-url", prUrl ?? "");
 }
-async function publish(octokit, repo, root, run, cfg, files, body, summary2) {
+async function publish(octokit, repo, root, run2, cfg, files, body, summary2) {
   const title = `fix: ${firstSentence(summary2)}`.slice(0, 72);
   const message = `${title}
 
-Fixes the failing ${run.workflowName} run ${run.url}`;
+Fixes the failing ${run2.workflowName} run ${run2.url}`;
   if (cfg.mode === "push") {
-    await commitAndPush(root, { branch: run.headBranch, files, message, createBranch: false });
-    info(`Pushed the fix to ${run.headBranch}.`);
+    await commitAndPush(root, { branch: run2.headBranch, files, message, createBranch: false });
+    info(`Pushed the fix to ${run2.headBranch}.`);
     return void 0;
   }
-  const branch = `${cfg.branchPrefix}run-${run.id}`;
+  const branch = `${cfg.branchPrefix}run-${run2.id}`;
   await commitAndPush(root, { branch, files, message, createBranch: true });
-  const pr = await openPullRequest(octokit, repo, { head: branch, base: run.headBranch, title, body, labels: cfg.labels });
+  const pr = await openPullRequest(octokit, repo, { head: branch, base: run2.headBranch, title, body, labels: cfg.labels });
   info(`Opened ${pr.url}`);
   return pr.url;
 }
