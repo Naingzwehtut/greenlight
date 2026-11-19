@@ -17,6 +17,7 @@ import {
 import { commitAndPush } from "./github/git.js";
 import { createProvider } from "./providers/index.js";
 import { renderReport } from "./report/render.js";
+import { fixTitle } from "./report/title.js";
 import { runGreenlight, shouldPublish } from "./run.js";
 import { runCommand } from "./util/exec.js";
 import type { Logger } from "./util/logger.js";
@@ -136,7 +137,7 @@ async function publish(
   body: string,
   summary: string,
 ): Promise<string | undefined> {
-  const title = `fix: ${firstSentence(summary)}`.slice(0, 72);
+  const title = fixTitle(summary);
   const message = `${title}\n\nFixes the failing ${run.workflowName} run ${run.url}`;
   if (cfg.mode === "push") {
     await commitAndPush(root, { branch: run.headBranch, files, message, createBranch: false });
@@ -179,12 +180,6 @@ function detectInstall(root: string): string | undefined {
   }
   if (existsSync(join(root, "requirements.txt"))) return "python -m pip install -r requirements.txt";
   return undefined;
-}
-
-function firstSentence(s: string): string {
-  const one = s.split(/(?<=[.!?])\s/)[0] ?? s;
-  const trimmed = one.replace(/[.!?]$/, "");
-  return trimmed.charAt(0).toLowerCase() + trimmed.slice(1);
 }
 
 main().catch((e: unknown) => {

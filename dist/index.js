@@ -84757,6 +84757,29 @@ function createProvider(cfg, env = process.env) {
   }
 }
 
+// src/report/title.ts
+var MAX_TITLE = 72;
+function fixTitle(summary2, max = MAX_TITLE) {
+  const sentence = firstSentence(summary2.trim());
+  const text = sentence ? lowerFirst(sentence) : "repair the failing CI checks";
+  return shorten(`fix: ${text}`, max);
+}
+function firstSentence(s) {
+  const one = s.split(/(?<=[.!?])\s/)[0] ?? s;
+  return one.replace(/\s+/g, " ").replace(/[.!?]+$/, "").trim();
+}
+function lowerFirst(s) {
+  const word = s.split(" ")[0] ?? "";
+  if (/^[A-Z][a-z]+$/.test(word)) return s.charAt(0).toLowerCase() + s.slice(1);
+  return s;
+}
+function shorten(s, max) {
+  if (s.length <= max) return s;
+  const cut = s.slice(0, max - 1);
+  const space = cut.lastIndexOf(" ");
+  return `${(space > max / 2 ? cut.slice(0, space) : cut).replace(/[\s,;:-]+$/, "")}\u2026`;
+}
+
 // src/safety/budget.ts
 var BudgetExceeded = class extends Error {
 };
@@ -85855,7 +85878,7 @@ ${j.log}`).join("\n\n");
   setOutput("pr-url", prUrl ?? "");
 }
 async function publish(octokit, repo, root, run2, cfg, files, body, summary2) {
-  const title = `fix: ${firstSentence(summary2)}`.slice(0, 72);
+  const title = fixTitle(summary2);
   const message = `${title}
 
 Fixes the failing ${run2.workflowName} run ${run2.url}`;
@@ -85898,11 +85921,6 @@ function detectInstall(root) {
   }
   if (existsSync7(join6(root, "requirements.txt"))) return "python -m pip install -r requirements.txt";
   return void 0;
-}
-function firstSentence(s) {
-  const one = s.split(/(?<=[.!?])\s/)[0] ?? s;
-  const trimmed = one.replace(/[.!?]$/, "");
-  return trimmed.charAt(0).toLowerCase() + trimmed.slice(1);
 }
 main().catch((e) => {
   setFailed(e instanceof Error ? e.message : String(e));
