@@ -60532,6 +60532,9 @@ function appendCapped(output2, chunk, max = MAX_OUTPUT) {
 function runCommand(command, opts) {
   return run(command, [], true, command, opts);
 }
+function runProgram(file2, args, opts) {
+  return run(file2, args, false, [file2, ...args].join(" "), opts);
+}
 function run(file2, args, shell, label, opts) {
   const command = label;
   const started = Date.now();
@@ -61006,9 +61009,9 @@ async function verify(root, commands, timeout, isTestFile) {
 }
 async function gitDiff(root, newFiles) {
   if (newFiles.length) {
-    await runCommand(`git add --intent-to-add -- ${newFiles.map((f) => `"${f}"`).join(" ")}`, { cwd: root, timeoutSec: 30 });
+    await runProgram("git", ["add", "--intent-to-add", "--", ...newFiles], { cwd: root, timeoutSec: 30 });
   }
-  const r = await runCommand("git diff --no-color --no-ext-diff", { cwd: root, timeoutSec: 60 });
+  const r = await runProgram("git", ["diff", "--no-color", "--no-ext-diff"], { cwd: root, timeoutSec: 60 });
   return r.output;
 }
 function rejectionMessage(failing, violations) {

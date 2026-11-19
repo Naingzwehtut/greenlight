@@ -85598,9 +85598,9 @@ async function verify(root, commands, timeout, isTestFile) {
 }
 async function gitDiff(root, newFiles) {
   if (newFiles.length) {
-    await runCommand(`git add --intent-to-add -- ${newFiles.map((f) => `"${f}"`).join(" ")}`, { cwd: root, timeoutSec: 30 });
+    await runProgram("git", ["add", "--intent-to-add", "--", ...newFiles], { cwd: root, timeoutSec: 30 });
   }
-  const r = await runCommand("git diff --no-color --no-ext-diff", { cwd: root, timeoutSec: 60 });
+  const r = await runProgram("git", ["diff", "--no-color", "--no-ext-diff"], { cwd: root, timeoutSec: 60 });
   return r.output;
 }
 function rejectionMessage(failing, violations) {

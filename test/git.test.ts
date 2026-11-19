@@ -36,3 +36,15 @@ describe("commitAndPush", () => {
     expect(files).toContain(name);
   });
 });
+
+describe("gitDiff", () => {
+  it("includes new files with shell characters in their names, without running them", async () => {
+    const { gitDiff } = await import("../src/agent/loop.js");
+    const root = makeRepo({ "a.ts": "1\n" });
+    const name = "c$(touch pwned-diff).ts";
+    writeFileSync(join(root, name), "new\n");
+    const diff = await gitDiff(root, [name]);
+    expect(diff).toContain(`b/${name}`);
+    expect(existsSync(join(root, "pwned-diff"))).toBe(false);
+  });
+});
