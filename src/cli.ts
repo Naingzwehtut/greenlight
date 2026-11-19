@@ -25,8 +25,10 @@ Options:
   --provider <name>   anthropic | openai | ollama
   --model <id>        Model ID
   --mode <mode>       pr | push | comment (the CLI never pushes; "comment" means diagnose only)
+  --effort <level>    low | medium | high | xhigh | max (providers that support it)
   --max-iterations n  Maximum model turns
-  --json              Print the result as JSON
+  --max-tokens n      Stop after this many input + output tokens
+  --json             Print the result as JSON
   -v, --version       Print the version
   -h, --help          Show this help
 `;
@@ -42,7 +44,9 @@ async function main(argv: string[]): Promise<number> {
       provider: { type: "string" },
       model: { type: "string" },
       mode: { type: "string" },
+      effort: { type: "string" },
       "max-iterations": { type: "string" },
+      "max-tokens": { type: "string" },
       json: { type: "boolean", default: false },
       help: { type: "boolean", short: "h", default: false },
       version: { type: "boolean", short: "v", default: false },
@@ -63,7 +67,9 @@ async function main(argv: string[]): Promise<number> {
     provider: values.provider,
     model: values.model,
     mode: values.mode,
+    effort: values.effort,
     maxIterations: parseNumberOption("--max-iterations", values["max-iterations"]),
+    maxTokens: parseNumberOption("--max-tokens", values["max-tokens"]),
   });
 
   if (command === "diagnose") {
