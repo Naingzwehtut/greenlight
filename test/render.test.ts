@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { AttemptResult } from "../src/agent/loop.js";
 import type { Diagnosis } from "../src/classify/index.js";
-import { COMMENT_MARKER, confidenceBar, renderReport } from "../src/report/render.js";
+import { codeCell, COMMENT_MARKER, confidenceBar, renderReport } from "../src/report/render.js";
 
 const diagnosis: Diagnosis = {
   category: "test",
@@ -54,5 +54,24 @@ describe("confidenceBar", () => {
   it("draws ten cells", () => {
     expect(confidenceBar(0.7)).toBe("███████░░░ 70%");
     expect(confidenceBar(0)).toBe("░░░░░░░░░░ 0%");
+  });
+});
+
+describe("codeCell", () => {
+  it("escapes pipes so a command does not split the table row", () => {
+    expect(codeCell("npm test 2>&1 | tee out.log")).toBe("`npm test 2>&1 \\| tee out.log`");
+  });
+
+  it("uses a longer fence when the command contains backticks", () => {
+    expect(codeCell("echo `date`")).toBe("`` echo `date` ``");
+  });
+
+  it("keeps a rendered check row to two cells", () => {
+    const md = renderReport({
+      diagnosis,
+      attempt: { ...attempt, checks: [{ name: "test", command: "npm test | cat", passed: true, output: "" }] },
+    });
+    const row = md.split("\n").find((l) => l.includes("npm test"))!;
+    expect(row.split(/(?<!\\)\|/).length).toBe(4);
   });
 });
