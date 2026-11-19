@@ -32,3 +32,31 @@ describe("search", () => {
     expect(r.content).not.toContain("linked");
   });
 });
+
+describe("read_file", () => {
+  const root = makeRepo({ "a.txt": "one\ntwo\nthree\n", "empty.txt": "" });
+  const read = (path: string, start: number | null = null, end: number | null = null) =>
+    runTool("read_file", { path, start_line: start, end_line: end }, ctx(root));
+
+  it("does not count the final newline as an extra line", async () => {
+    const r = await read("a.txt");
+    expect(r.content).toContain("(lines 1-3 of 3)");
+    expect(r.isError).toBeFalsy();
+  });
+
+  it("explains a start line past the end of the file", async () => {
+    const r = await read("a.txt", 10);
+    expect(r.isError).toBe(true);
+    expect(r.content).toMatch(/has 3 lines; start_line 10 is past the end/);
+  });
+
+  it("rejects an end line before the start line", async () => {
+    const r = await read("a.txt", 3, 1);
+    expect(r.isError).toBe(true);
+    expect(r.content).toMatch(/end_line \(1\) is before start_line \(3\)/);
+  });
+
+  it("reports an empty file", async () => {
+    expect((await read("empty.txt")).content).toBe("empty.txt is empty.");
+  });
+});
