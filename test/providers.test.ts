@@ -105,3 +105,26 @@ describe("createProvider", () => {
     expect(createProvider({ ...cfg, provider: "ollama" }, {}).model).toBe("qwen3-coder");
   });
 });
+
+describe("OpenAICompatibleProvider error bodies", () => {
+  const session = (body: unknown) =>
+    new OpenAICompatibleProvider({
+      name: "openai",
+      model: "gpt-x",
+      baseUrl: "http://localhost:1/v1",
+      fetchImpl: (async () => new Response(JSON.stringify(body))) as typeof fetch,
+    }).startSession({ system: "s", prompt: "p", tools: [] });
+
+  it("reports an error object sent with HTTP 200", async () => {
+    await expect(session({ error: { message: "model not found" } }).next()).rejects.toThrow("gpt-x request failed: model not found");
+  });
+
+  it("reports an error string sent with HTTP 200", async () => {
+    await expect(session({ error: "overloaded" }).next()).rejects.toThrow("gpt-x request failed: overloaded");
+  });
+
+  it("explains a response without choices instead of crashing", async () => {
+    await expect(session({}).next()).rejects.toThrow("gpt-x returned no choices.");
+    await expect(session({ choices: [] }).next()).rejects.toThrow("gpt-x returned no choices.");
+  });
+});

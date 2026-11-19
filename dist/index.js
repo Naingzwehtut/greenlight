@@ -84698,8 +84698,12 @@ var OpenAICompatibleProvider = class {
           throw new Error(`${model} request failed: HTTP ${res.status} ${(await res.text()).slice(0, 500)}`);
         }
         const data = await res.json();
-        const choice = data.choices[0];
-        if (!choice) throw new Error(`${model} returned no choices.`);
+        if (data.error) {
+          const detail = typeof data.error === "string" ? data.error : data.error.message ?? JSON.stringify(data.error);
+          throw new Error(`${model} request failed: ${detail.slice(0, 500)}`);
+        }
+        const choice = Array.isArray(data.choices) ? data.choices[0] : void 0;
+        if (!choice?.message) throw new Error(`${model} returned no choices.`);
         const msg = choice.message;
         messages.push({ role: "assistant", content: msg.content ?? null, tool_calls: msg.tool_calls });
         const toolCalls = (msg.tool_calls ?? []).map((c) => ({
