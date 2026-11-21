@@ -1,4 +1,4 @@
-name: greenlight
+name: Greenlight CI Fixer
 description: AI agent that reads failing CI logs, reproduces the failure, fixes the code and opens a pull request.
 author: Naingzwehtut
 branding:
