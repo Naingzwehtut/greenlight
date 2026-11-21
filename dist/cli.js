@@ -39854,7 +39854,7 @@ import { parseArgs } from "node:util";
 // package.json
 var package_default = {
   name: "greenlight-ci",
-  version: "0.1.0",
+  version: "0.2.0",
   description: "An AI agent that turns red CI green: it reads failing CI logs, reproduces the failure, fixes the code and opens a pull request.",
   type: "module",
   license: "MIT",
